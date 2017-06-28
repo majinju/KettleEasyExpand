@@ -1,0 +1,67 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>cn.benma666</groupId>
+    <artifactId>KettleUtil</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0.0</version>
+    <description>一个简化kettle插件开发的通用插件，采用JSON作为参数配置，省去ui调试设计步骤，只需一个类就可以开发一个插件。</description>
+
+    <name>eova-ma</name>
+    <url>http://git.oschina.net/majinju/KettleUtil</url>
+    
+    <organization>
+    	<url>www.benma666.cn</url>
+    	<name>benma666</name>
+    </organization>
+
+    <properties>
+        <!-- 主要依赖库的版本定义 -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jdk.version>1.7</jdk.version>
+        <junit.version>4.11</junit.version>
+    </properties>
+
+    <dependencies>
+        
+        <dependency>
+			<groupId>cn.benma666</groupId>
+			<artifactId>myutils</artifactId>
+			<version>0.0.1</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <finalName>KettleUtil</finalName>
+        <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
+        <testSourceDirectory>${basedir}/src/test/java</testSourceDirectory>
+        <outputDirectory>${basedir}/target/classes</outputDirectory>
+        <testOutputDirectory>${basedir}/target/classes</testOutputDirectory>
+
+        <plugins>
+            <!-- compiler插件, 设定JDK版本 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.0</version>
+                <configuration>
+                    <source>${jdk.version}</source>
+                    <target>${jdk.version}</target>
+                    <showWarnings>true</showWarnings>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <compilerArguments>
+                  		<extdirs>/NIS/data-integration5.4/lib</extdirs>
+                    </compilerArguments>
+                </configuration>
+            </plugin>
+
+            <!-- clean插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.5</version>
+            </plugin>
+            
+        </plugins>
+    </build>
+</project>
