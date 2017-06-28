@@ -50,7 +50,8 @@
                     <showWarnings>true</showWarnings>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <compilerArguments>
-                  		<extdirs>/NIS/data-integration5.4/lib</extdirs>
+                  		<extdirs>${env.KETTLE_HOME}/lib</extdirs>
+                  		<extdirs>${env.KETTLE_HOME}/libswt/win32</extdirs>
                     </compilerArguments>
                 </configuration>
             </plugin>
