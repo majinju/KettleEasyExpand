@@ -38,7 +38,7 @@ public class CommonUtil {
         Repository repository = KettleUtils.getInstanceRep();
         dbId = repository.getDatabaseID(dbCode);
         if(dbId==null){
-            JSONObject metlDb = Db.use(UtilConst.DATASOURCE_METL).
+            JSONObject metlDb = Db.use(UtilConst.DS_APP).
                     findFirst("select * from metl_database db where db.ocode=?", dbCode);
             DatabaseMeta dataMeta = new DatabaseMeta(dbCode, KettleUtils.dbTypeToKettle(metlDb.getString("type")), 
                     DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_JNDI], null, dbCode, null, null, null);
