@@ -9,8 +9,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/Kettle Core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Kettle Engine"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Kettle UI"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/myutils"/>
-	<classpathentry excluding="**" kind="src" output="target/classes" path="src/main/resources">
+	<classpathentry kind="src" output="target/classes" path="src/main/resources">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>

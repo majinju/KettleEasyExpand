@@ -35,7 +35,7 @@ import com.alibaba.fastjson.JSONObject;
  * @author jingma
  * @version 
  */
-public class Db extends org.beetl.sql.core.db.Db{
+public class Db extends cn.benma666.db.Db{
     /**
     * 日志
     */
