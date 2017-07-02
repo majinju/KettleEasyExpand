@@ -18,6 +18,6 @@ public class KuConst implements KuConstInterface{
     /**
     * kettle资源库数据源
     */
-    public static String DATASOURCE_KETTLE = "kettle";
+    public static String DS_KETTLE = "kettle";
     
 }

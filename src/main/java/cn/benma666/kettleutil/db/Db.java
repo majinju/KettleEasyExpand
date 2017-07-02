@@ -21,7 +21,6 @@ import org.pentaho.di.job.entry.JobEntryBase;
 import org.pentaho.di.trans.step.BaseStep;
 
 import cn.benma666.constants.UtilConst;
-import cn.benma666.kettleutil.common.KuConst;
 import cn.benma666.myutils.StringUtil;
 
 import com.alibaba.druid.pool.DruidDataSource;
@@ -44,7 +43,7 @@ public class Db extends cn.benma666.db.Db{
     * 查询一般配置的sql语句
     */
     private static String FIND_GENERAL_CONFIG_SQL = 
-            "select expand from metl_unify_dict d where d.ocode=? and d.dict_category=?";
+            "select expand from sys_unify_dict d where d.ocode=? and d.dict_category=?";
     /**
     * 获取数据库操作对象 <br/>
     * @author jingma

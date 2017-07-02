@@ -29,14 +29,14 @@ public class Dict {
     * @return 该类别字典的查询SQL
     */
     public static String dictCategoryToSql(String dictCategory) {
-        String defaultVal = "select ocode ID,oname CN from metl_unify_dict where dict_category='"
+        String defaultVal = "select ocode ID,oname CN from sys_unify_dict where dict_category='"
                 +dictCategory+"' and is_disable='"+UtilConst.WHETHER_FALSE
                 +"' order by oorder asc";
         String result = dictCategory;
         //如果不是select开头的，则判断为使用同一字典方式。
         if(StringUtil.isNotBlank(dictCategory)&&!dictCategory.toLowerCase().startsWith("select")){
-            String expand = Db.use(UtilConst.DS_APP).queryStr(
-                    "select expand from metl_unify_dict t "
+            String expand = Db.use(UtilConst.DS_SYS).queryStr(
+                    "select expand from sys_unify_dict t "
                     + "where t.dict_category='DICT_CATEGORY' and is_disable=? and t.ocode=?", 
                     UtilConst.WHETHER_FALSE, dictCategory);
                 try {
@@ -88,8 +88,8 @@ public class Dict {
     * @return 对象列表
     */
     public static List<JSONObject> dictObjList(String dictCategory){
-        List<JSONObject> result = Db.use(UtilConst.DS_APP).find(
-                "select * from metl_unify_dict where dict_category=? and is_disable=? order by oorder asc",
+        List<JSONObject> result = Db.use(UtilConst.DS_SYS).find(
+                "select * from sys_unify_dict where dict_category=? and is_disable=? order by oorder asc",
                 dictCategory,UtilConst.WHETHER_FALSE);
         return result;
     }
@@ -101,8 +101,8 @@ public class Dict {
     * @return 对象
     */
     public static JSONObject dictObj(String dictCategory,String key){
-        JSONObject result = Db.use(UtilConst.DS_APP).findFirst(
-                "select * from metl_unify_dict where dict_category=? and is_disable=? and ocode=?",
+        JSONObject result = Db.use(UtilConst.DS_SYS).findFirst(
+                "select * from sys_unify_dict where dict_category=? and is_disable=? and ocode=?",
                 dictCategory,UtilConst.WHETHER_FALSE,key);
         return result;
     }
@@ -123,7 +123,7 @@ public class Dict {
         if(strs.length>1){
             result[1] = strs[1].substring(3);
         }else{
-            result[1] = UtilConst.DS_APP;
+            result[1] = UtilConst.DS_SYS;
         }
         return result;
     }
