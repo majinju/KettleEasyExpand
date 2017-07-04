@@ -1,5 +1,7 @@
 # 插件简介
 
+一个简化kettle插件开发的通用插件，采用JSON作为参数配置，省去ui调试设计步骤，只需一个类就可以开发一个插件。基于本插件开发的插件将很容易集成到km调度系统中去。
+
 ## 设计初衷
 
  该kettle插件功能类似kettle现有的定义java类插件，自定java类插件主要是支持在kettle中直接编写java代码实现自定特殊功能，而本控件主要是将自定义代码转移到jar包，就是说自定义功能的实现改为在eclipse等ide中开发。
@@ -24,16 +26,26 @@
 
 ## 环境搭建
 
-
+1. 在eclipse中创建用户类库ku，到[kettle管理平台项目](https://github.com/majinju/kettle-manager)介绍的博文中下载0.2.0版部署包，然后将部署包的lib目录中的jar全部加入。
+1. 在eclipse中创建用户类库kettleLib，将你的kettle的目录下的lib全部加入。
+1. 在eclipse中创建一个java项目，添加前面创建的两个用户类库到构建路径。
+1. 然后就可以新建一个java类，按后面的步骤进行插件开发了。
 
 ## 作业插件开发
 
+[示例代码](https://github.com/majinju/KettleUtil/blob/master/src/main/java/cn/benma666/kettleutil/utilrun/JeurDemo.java)
 
+![image](http://blog.benma666.cn/project/KettleUtil/images/v1.0.0/作业插件示例.jpg)
 
 ## 转换插件开发
 
+[示例代码](https://github.com/majinju/KettleUtil/blob/master/src/main/java/cn/benma666/kettleutil/utilrun/KurDemo.java)
 
+![image](http://blog.benma666.cn/project/KettleUtil/images/v1.0.0/转换插件示例.jpg)
 
 # 插件调试
+
+1. [kettle源码运行讲解](http://www.cnblogs.com/majinju/p/4455107.html)
+1. [kettle源码工程](https://github.com/majinju/pentaho-kettle)
 
 
