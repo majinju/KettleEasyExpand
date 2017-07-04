@@ -30,6 +30,17 @@
 			<artifactId>myutils</artifactId>
 			<version>0.1.0</version>
         </dependency>
+		<dependency>
+			<groupId>com.github.junrar</groupId>
+			<artifactId>junrar</artifactId>
+			<version>0.7</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-vfs2</artifactId>
+					<groupId>org.apache.commons</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
     </dependencies>
     <build>
         <finalName>KettleUtil</finalName>
