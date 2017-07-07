@@ -3,13 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>cn.benma666</groupId>
-    <artifactId>KettleUtil</artifactId>
+    <artifactId>KettleEasyExpand</artifactId>
     <packaging>jar</packaging>
     <version>1.0.0</version>
     <description>一个简化kettle插件开发的通用插件，采用JSON作为参数配置，省去ui调试设计步骤，只需一个类就可以开发一个插件。</description>
 
-    <name>KettleUtil</name>
-    <url>http://git.oschina.net/majinju/KettleUtil</url>
+    <name>KettleEasyExpand</name>
+    <url>http://git.oschina.net/majinju/KettleEasyExpand</url>
     
     <organization>
     	<url>www.benma666.cn</url>
@@ -43,7 +43,7 @@
 		</dependency>
     </dependencies>
     <build>
-        <finalName>KettleUtil</finalName>
+        <finalName>KettleEasyExpand</finalName>
         <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
         <testSourceDirectory>${basedir}/src/test/java</testSourceDirectory>
         <outputDirectory>${basedir}/target/classes</outputDirectory>
