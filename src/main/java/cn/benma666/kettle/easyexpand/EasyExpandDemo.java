@@ -4,7 +4,7 @@
 * Copyright (c) 2016, jingma All Rights Reserved.
 */
 
-package cn.benma666.kettle.easyexpand.demo;
+package cn.benma666.kettle.easyexpand;
 
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.row.ValueMeta;
@@ -20,12 +20,12 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 /**
- * kettle util 运行示例<br/>
+ * EasyExpand 运行示例<br/>
  * date: 2016年6月29日 <br/>
  * @author jingma
  * @version 
  */
-public class KurDemo extends EasyExpandRunBase{
+public class EasyExpandDemo extends EasyExpandRunBase{
     /**
     * 具体处理每一行数据
     * @see cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase#disposeRow(java.lang.Object[])

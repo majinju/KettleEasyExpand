@@ -41,7 +41,7 @@ public class EasyExpandMeta extends BaseStepMeta implements StepMetaInterface {
     /**
     * 类名称
     */
-    private String className = "";
+    private String className = "cn.benma666.kettle.easyexpand.EasyExpandDemo";
 	/**
 	* 具体配置信息
 	*/

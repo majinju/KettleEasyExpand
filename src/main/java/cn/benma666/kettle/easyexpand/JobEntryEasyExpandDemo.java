@@ -4,7 +4,7 @@
 * Copyright (c) 2016, jingma All Rights Reserved.
 */
 
-package cn.benma666.kettle.easyexpand.demo;
+package cn.benma666.kettle.easyexpand;
 
 import cn.benma666.kettle.jobentry.easyexpand.JobEntryEasyExpandRunBase;
 
@@ -13,12 +13,12 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 /**
- * job entry kettle util 运行示例<br/>
+ * JobEntryEasyExpand 运行示例<br/>
  * date: 2016年6月29日 <br/>
  * @author jingma
  * @version 
  */
-public class JeurDemo extends JobEntryEasyExpandRunBase{
+public class JobEntryEasyExpandDemo extends JobEntryEasyExpandRunBase{
 
     /**
     * 

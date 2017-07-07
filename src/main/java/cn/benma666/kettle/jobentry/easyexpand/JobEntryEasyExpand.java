@@ -58,7 +58,7 @@ public class JobEntryEasyExpand extends JobEntryBase implements Cloneable,
     private static Class<?> PKG = JobEntryEasyExpand.class; // for i18n
                                                             // purposes, needed
                                                             // by Translator2!!
-    private String className = "net.oschina.kettleutil.utilrun.JeurDemo";
+    private String className = "cn.benma666.kettle.easyexpand.JobEntryEasyExpandDemo";
     private String configInfo = "{}";
 
     public JobEntryEasyExpand() {
