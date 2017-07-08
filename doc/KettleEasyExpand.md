@@ -15,7 +15,7 @@
 ## 关键信息
 
 1.	[项目博客地址](http://blog.benma666.cn/)
-2.	[项目源码地址](https://github.com/majinju/KettleUtil)
+2.	[项目源码地址](https://github.com/majinju/KettleEasyExpand)
 3.	问题反馈邮箱：jinjuma@yeah.net。
 
 # 插件部署
@@ -47,5 +47,3 @@
 
 1. [kettle源码运行讲解](http://www.cnblogs.com/majinju/p/4455107.html)
 1. [kettle源码工程](https://github.com/majinju/pentaho-kettle)
-
-

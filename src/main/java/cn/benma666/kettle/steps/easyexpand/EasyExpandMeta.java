@@ -124,7 +124,7 @@ public class EasyExpandMeta extends BaseStepMeta implements StepMetaInterface {
 	}
 
 	public void setDefault() {
-        className = "net.oschina.kettleutil.utilrun.KurDemo";
+        className = "cn.benma666.kettle.easyexpand.EasyExpandDemo";
 		configInfo = "{}";
 	}
 

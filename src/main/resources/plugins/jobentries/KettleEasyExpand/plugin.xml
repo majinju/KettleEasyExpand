@@ -3,7 +3,7 @@
    id="JobEntryEasyExpand"
    iconfile="icon.png"
    description="kettle简单扩展"
-   tooltip="kettle工具作业插件的简单扩展支持，采用JSON作为参数配置，省去ui调试设计步骤，只需一个类就可以开发一个插件。"
+   tooltip="kettle简单扩展作业插件的简单扩展支持，采用JSON作为参数配置，省去ui调试设计步骤，只需一个类就可以开发一个插件。"
    category="General"
    classname="cn.benma666.kettle.jobentry.easyexpand.JobEntryEasyExpand">
    <libraries>
