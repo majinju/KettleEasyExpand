@@ -396,11 +396,11 @@ public class KettleUtils {
             System.setProperty("DI_HOME", System.getenv("KETTLE_HOME"));
             System.setProperty("KETTLE_HOME", System.getenv("KETTLE_HOME"));
             System.setProperty("org.osjava.sj.root", System.getenv("KETTLE_HOME")+"/simple-jndi");
-            log.info("KETTLE_HOME配置[能自动加载该目录下plugins中的插件]："+System.getenv("KETTLE_HOME"));
+            log.debug("KETTLE_HOME配置[能自动加载该目录下plugins中的插件]："+System.getenv("KETTLE_HOME"));
         }
         if(System.getenv("KETTLE_JNDI_ROOT")!=null){
             System.setProperty("org.osjava.sj.root", System.getenv("KETTLE_JNDI_ROOT"));
-            log.info("Simple-jndi配置根路径："+System.getenv("KETTLE_JNDI_ROOT"));
+            log.debug("Simple-jndi配置根路径："+System.getenv("KETTLE_JNDI_ROOT"));
         }
         //初始化kettle环境
         if(!KettleEnvironment.isInitialized()){
