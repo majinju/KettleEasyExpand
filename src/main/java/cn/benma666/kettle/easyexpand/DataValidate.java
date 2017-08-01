@@ -137,7 +137,7 @@ public class DataValidate extends EasyExpandRunBase{
             }
         }
         if(validateInfo.size()>0){
-            if(RESULT_VALIDATE_INFO.equals(configInfo.getString(RESULT_VALIDATE_INFO))){
+            if(RESULT_VALIDATE_INFO.equals(configInfo.getString(RESULT_DISPOSE))){
                 outputRow[getFieldIndex(FIELD_VALIDATE_INFO)] = validateInfo.toJSONString();
                 //将该记录设置到下一步骤的读取序列中
                 ku.putRow(data.outputRowMeta, outputRow); // copy row to possible alternate rowset(s)
@@ -429,7 +429,7 @@ public class DataValidate extends EasyExpandRunBase{
     
     public void getFields(RowMetaInterface r, String origin, RowMetaInterface[] info, StepMeta nextStep, VariableSpace space) {
         //添加输出到下一步的字段
-        if(RESULT_VALIDATE_INFO.equals(configInfo.getString(RESULT_VALIDATE_INFO))){
+        if(RESULT_VALIDATE_INFO.equals(configInfo.getString(RESULT_DISPOSE))){
             addField(r,FIELD_VALIDATE_INFO,ValueMeta.TYPE_STRING,ValueMeta.TRIM_TYPE_BOTH,origin,"验证信息");
         }
     }
