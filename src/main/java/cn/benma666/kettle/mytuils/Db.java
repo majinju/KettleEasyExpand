@@ -112,7 +112,7 @@ public class Db extends cn.benma666.db.Db{
     public static String getDbtypeByDatasource(DataSource dataSource) {
         String dbType = null;
         if(dataSource instanceof DruidDataSource){
-            dbType = ((DruidDataSource)dataSource).getDbType();
+            dbType = JdbcUtils.getDbType(((DruidDataSource)dataSource).getUrl(), null);
         }else if(dataSource instanceof SJDataSource){
             dbType = JdbcUtils.getDbType(
                     ((SJDataSource)dataSource).toString().split("::::")[1],

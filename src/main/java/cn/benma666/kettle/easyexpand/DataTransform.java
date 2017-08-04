@@ -39,10 +39,10 @@ public class DataTransform extends EasyExpandRunBase{
 
     //参数
     private static final String TRANS_INFO = "转换信息";
-    private static final String TRANS_FIELD = "验证字段";
-    private static final String TRANS_RULE = "验证规则";
+    private static final String TRANS_FIELD = "转换字段";
+    private static final String TRANS_RULE = "转换规则";
     private static final String RESULT_LATER = "结果后缀";
-    private static final String TRANS_RULE_DATA = "验证规则数据";
+    private static final String TRANS_RULE_DATA = "转换规则数据";
     
     private static final String TRANS_RULE_DATA_EXCLUDES_FIELDS = "排除的字段";
     private static final String TRANS_RULE_DATA_FGF = "分隔符";
