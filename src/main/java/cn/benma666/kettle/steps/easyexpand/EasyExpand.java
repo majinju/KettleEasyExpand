@@ -1,5 +1,7 @@
 package cn.benma666.kettle.steps.easyexpand;
 
+import java.util.Arrays;
+
 import org.apache.commons.lang3.StringUtils;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleStepException;
@@ -45,7 +47,7 @@ public class EasyExpand extends BaseStep implements StepInterface {
                 return kui.run();
             } catch (Exception e) {
                 setErrors(getErrors()+1);
-                logError("运行失败,"+meta.getClassName()+","
+                logError("运行失败,"+meta.getClassName()+","+Arrays.toString(getRow())+","
                 +environmentSubstitute(meta.getConfigInfo()), e);
                 return defaultRun();
             }

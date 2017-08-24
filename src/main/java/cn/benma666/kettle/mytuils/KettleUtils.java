@@ -1,5 +1,6 @@
 package cn.benma666.kettle.mytuils;
 
+import java.lang.Thread.State;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -884,6 +885,58 @@ public class KettleUtils {
 		tpu.doPreview();
 		return TransPreviewUtil.getData(tpu.getPreviewRowsMeta(testStep),tpu.getPreviewRows(testStep));
 	}
+	
+	/**
+	* 停止作业，包含子作业和转换 <br/>
+	* @author jingma
+	* @param job
+	*/
+	public static void jobStopAll(Job job){
+        job.stopAll();
+        JobMeta jobMeta = job.getJobMeta();
+        for(JobEntryCopy jec:jobMeta.getJobCopies()){
+            if(jec.isTransformation()){
+                JobEntryTrans jet = (JobEntryTrans)jec.getEntry();
+                if(jet.getTrans()!=null){
+                    jet.getTrans().stopAll();
+                }
+            }else if(jec.isJob()){
+                JobEntryJob jej = (JobEntryJob)jec.getEntry();
+                if(jej.getJob()!=null){
+                    jobStopAll(jej.getJob());
+                }
+            }
+        }
+	}
+    /**
+    * 结束作业，包含子作业和转换 <br/>
+    * @author jingma
+    * @param job
+    */
+    @SuppressWarnings("deprecation")
+    public static void jobKillAll(Job job){
+        job.stopAll();
+        JobMeta jobMeta = job.getJobMeta();
+        for(JobEntryCopy jec:jobMeta.getJobCopies()){
+            if(jec.isTransformation()){
+                JobEntryTrans jet = (JobEntryTrans)jec.getEntry();
+                if(jet.getTrans()!=null){
+                    jet.getTrans().killAll();
+                }
+            }else if(jec.isJob()){
+                JobEntryJob jej = (JobEntryJob)jec.getEntry();
+                if(jej.getJob()!=null){
+                    jobKillAll(jej.getJob());
+                }
+            }
+        }
+        //采用线程中断结束卡住的线程
+        if(job.getState().equals(State.BLOCKED)||job.getState().equals(State.TIMED_WAITING)){
+            job.stop();
+        }else{
+            job.interrupt();
+        }
+    }
 
 	/**
 	* 将指定job复制到KettleUtils中的资源库 <br/>
