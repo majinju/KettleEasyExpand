@@ -15,7 +15,12 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.Scanner;
 
+import net.sf.json.JSON;
+
+import org.junit.Ignore;
 import org.junit.Test;
+
+import cn.benma666.myutils.XmlUtil;
 
 /**
  *  <br/>
@@ -23,6 +28,7 @@ import org.junit.Test;
  * @author jingma
  * @version 
  */
+@Ignore
 public class SocketTest {
 
     @Test
@@ -80,7 +86,11 @@ public class SocketTest {
                 byte[] xmlBytes = new byte[xmllen];
                 dis.read(xmlBytes,0 , xmlBytes.length);
                 msgCount -= xmlBytes.length;
-                System.out.println(new String(xmlBytes,"UTF-8"));
+                String xml = new String(xmlBytes,"UTF-8");
+                xml = xml.substring(0, xml.length()-2);
+                System.out.println(xml);
+                JSON msg = XmlUtil.xmlToJson(xml);
+                System.out.println(msg);
                 dis.read(temp,0 , temp.length);
                 int imagenum = bytestoint(temp);
                 msgCount -= 4;
