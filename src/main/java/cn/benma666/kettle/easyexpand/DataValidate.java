@@ -168,7 +168,6 @@ public class DataValidate extends EasyExpandRunBase{
             result = StringUtils.isNotBlank(object.toString());
         }
         if(!result){
-            vi.put(VALIDATE_VAL, object.toString());
             validateInfo.add(vi);
         }
         return result;
@@ -367,11 +366,18 @@ public class DataValidate extends EasyExpandRunBase{
      public String getDefaultConfigInfo(TransMeta transMeta, String stepName) throws Exception{
         //创建一个JSON对象，用于构建配置对象，避免直接拼字符串构建JSON字符串
         JSONObject params = new JSONObject();
+        params.put(HELP_INFO, "["+RESULT_DISPOSE+"]有如下选项："+RESULT_VALIDATE_INFO+","+RESULT_CONTINUE);
         params.put(RESULT_DISPOSE, RESULT_VALIDATE_INFO);
         JSONArray validateInfo = new JSONArray();
-        
-        //时间格式校验
+
+        //不为空校验
         JSONObject json = new JSONObject();
+        json.put(VALIDATE_FIELD, "test_date");
+        json.put(VALIDATE_RULE, RULE_NOT_EMPTY);
+        json.put(VALIDATE_RULE_DATA, "");
+        validateInfo.add(json);
+        //时间格式校验
+        json = new JSONObject();
         json.put(VALIDATE_FIELD, "test_date");
         json.put(VALIDATE_RULE, RULE_DATE_FORMAT);
         json.put(VALIDATE_RULE_DATA, "");

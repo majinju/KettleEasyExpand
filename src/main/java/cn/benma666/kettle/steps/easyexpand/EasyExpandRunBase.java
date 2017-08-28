@@ -33,6 +33,7 @@ import com.alibaba.fastjson.JSONObject;
  * @version 
  */
 public abstract class EasyExpandRunBase {
+    public static final String HELP_INFO = "帮助信息";
     protected Log log = LogFactory.getLog(getClass());
     /**
     * kettleUtil控件
