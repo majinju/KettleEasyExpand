@@ -800,7 +800,7 @@ public class KettleUtils {
     public static RepositoryDirectoryInterface makeDirs(String directoryName) throws KettleException {
         if(StringUtil.isNotBlank(directoryName)){
             String parentDirectory = "/";
-            String[] dirArr = directoryName.replace("\\", "/").replace("//", "/").split("/");
+            String[] dirArr = directoryName.replace("\\", "/").split("/");
             for(String dirStr:dirArr){
                 parentDirectory = getOrMakeDirectory(parentDirectory, dirStr).getPath();
             }
