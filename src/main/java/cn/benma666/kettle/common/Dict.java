@@ -6,7 +6,10 @@
 
 package cn.benma666.kettle.common;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cn.benma666.constants.UtilConst;
 import cn.benma666.kettle.mytuils.Db;
@@ -21,6 +24,11 @@ import com.alibaba.fastjson.JSONObject;
  * @version 
  */
 public class Dict {
+	
+	/**
+	 * 字典缓存
+	 */
+	private static Map<String, Map<String,JSONObject>> dictCache = new HashMap<String, Map<String,JSONObject>>();
 
     /**
     * 根据字典类别得到该类别字典的查询SQL <br/>
@@ -58,40 +66,24 @@ public class Dict {
     * @param dictCategory 字典类别
     * @return 字典列表
     */
+    public static Map<String, JSONObject> dictMap(String dictCategory){
+    	Map<String, JSONObject> result = dictCache.get(dictCategory);
+    	if(result==null){
+            String expStr = dictCategoryToSql(dictCategory);
+            String[] dict = Dict.parseDictExp(expStr);
+            result = Db.use(dict[1]).findMap("id",dict[0]);
+            dictCache.put(dictCategory, result);
+    	}
+        return result;
+    }
+    /**
+    * 获取字典列表 <br/>
+    * @author jingma
+    * @param dictCategory 字典类别
+    * @return 字典列表
+    */
     public static List<JSONObject> dictList(String dictCategory){
-        String expStr = dictCategoryToSql(dictCategory);
-        String[] dict = Dict.parseDictExp(expStr);
-        List<JSONObject> result = Db.use(dict[1]).find(dict[0]);
-        return result;
-    }
-    /**
-    * 获取字典值 <br/>
-    * @author jingma
-    * @param dictCategory 字典类别
-    * @param key 键
-    * @return 值
-    */
-    public static String dictValue(String dictCategory,String key){
-        String expStr = dictCategoryToSql(dictCategory);
-        String[] dict = Dict.parseDictExp(expStr);
-        String sql = "select cn from ("+dict[0]+") t where t.id=?";
-        String result = Db.use(dict[1]).queryStr(sql, key);
-        if(StringUtil.isBlank(result)){
-            result = key;
-        }
-        return result;
-    }
-    /**
-    * 获取字典对象列表 <br/>
-    * @author jingma
-    * @param dictCategory 字典类别
-    * @return 对象列表
-    */
-    public static List<JSONObject> dictObjList(String dictCategory){
-        List<JSONObject> result = Db.use(UtilConst.DS_SYS).find(
-                "select * from sys_unify_dict where dict_category=? and is_disable=? order by oorder asc",
-                dictCategory,UtilConst.WHETHER_FALSE);
-        return result;
+        return new ArrayList<JSONObject>(dictMap(dictCategory).values());
     }
     /**
     * 获取字典对象 <br/>
@@ -101,9 +93,23 @@ public class Dict {
     * @return 对象
     */
     public static JSONObject dictObj(String dictCategory,String key){
-        JSONObject result = Db.use(UtilConst.DS_SYS).findFirst(
-                "select * from sys_unify_dict where dict_category=? and is_disable=? and ocode=?",
-                dictCategory,UtilConst.WHETHER_FALSE,key);
+        return dictMap(dictCategory).get(key);
+    }
+    /**
+    * 获取字典值 <br/>
+    * @author jingma
+    * @param dictCategory 字典类别
+    * @param key 键
+    * @return 值
+    */
+    public static String dictValue(String dictCategory,String key){
+        JSONObject dict = dictObj(dictCategory,key);
+        String result;
+		if(dict==null){
+            result = key;
+        }else{
+        	result = dict.getString("cn");
+        }
         return result;
     }
     /**
