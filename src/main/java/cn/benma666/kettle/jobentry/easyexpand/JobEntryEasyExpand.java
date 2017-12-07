@@ -32,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.pentaho.di.cluster.SlaveServer;
 import org.pentaho.di.core.CheckResultInterface;
 import org.pentaho.di.core.Result;
+import org.pentaho.di.core.annotations.JobEntry;
 import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.exception.KettleDatabaseException;
 import org.pentaho.di.core.exception.KettleException;
@@ -53,6 +54,8 @@ import org.w3c.dom.Node;
 * @author jingma
 * @version 
 */
+//@JobEntry(id="JobEntryEasyExpand",name="kettle简单扩展",categoryDescription="General",
+//image="cn/benma666/kettle/jobentry/easyexpand/EasyExpend.png")
 public class JobEntryEasyExpand extends JobEntryBase implements Cloneable,
         JobEntryInterface {
     private static Class<?> PKG = JobEntryEasyExpand.class; // for i18n

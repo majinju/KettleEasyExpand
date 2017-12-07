@@ -9,6 +9,7 @@ import org.pentaho.di.core.CheckResult;
 import org.pentaho.di.core.CheckResultInterface;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.Counter;
+import org.pentaho.di.core.annotations.Step;
 import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleValueException;
@@ -35,6 +36,9 @@ import org.w3c.dom.Node;
 * @author jingma
 * @version 
 */
+//@Step(id="EasyExpand",name="kettle简单扩展",
+//categoryDescription="i18n:i18n:org.pentaho.di.trans.step:BaseStep.Category.Utility",
+//image="cn/benma666/kettle/steps/easyexpand/EasyExpend.png")
 public class EasyExpandMeta extends BaseStepMeta implements StepMetaInterface {
 
 	private static Class<?> PKG = EasyExpandMeta.class; // for i18n purposes

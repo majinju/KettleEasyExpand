@@ -96,6 +96,21 @@ public class Dict {
         return dictMap(dictCategory).get(key);
     }
     /**
+    * 获取字典对象 <br/>
+    * @author jingma
+    * @param dictCategory 字典类别
+    * @param key 键
+    * @return 对象
+    */
+    public static List<JSONObject> dictObjMore(String dictCategory,String key){
+    	String[] keyArr = key.split(",");
+    	List<JSONObject> result = new ArrayList<JSONObject>();
+    	for(String k:keyArr){
+    		result.add(dictMap(dictCategory).get(k));
+    	}
+    	return result;
+    }
+    /**
     * 获取字典值 <br/>
     * @author jingma
     * @param dictCategory 字典类别
@@ -109,6 +124,26 @@ public class Dict {
             result = key;
         }else{
         	result = dict.getString("cn");
+        }
+        return result;
+    }
+    /**
+    * 获取字典值 <br/>
+    * @author jingma
+    * @param dictCategory 字典类别
+    * @param key 键
+    * @return 值
+    */
+    public static String dictValueMore(String dictCategory,String key){
+        List<JSONObject> dictList = dictObjMore(dictCategory,key);
+        String result = "";
+		if(dictList.isEmpty()||dictList.get(0)==null){
+            result = key;
+        }else{
+        	for(JSONObject obj : dictList){
+        		result = result + "," + obj.getString("cn");
+        	}
+        	result = result.substring(1, result.length());
         }
         return result;
     }

@@ -21,14 +21,14 @@ import org.pentaho.di.core.variables.VariableSpace;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.StepMeta;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-
 import cn.benma666.kettle.common.Dict;
 import cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase;
 import cn.benma666.myutils.DateUtil;
 import cn.benma666.myutils.SfzhUtil;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 
 /**
  * 数据转换<br/>
@@ -224,7 +224,11 @@ public class DataTransform extends EasyExpandRunBase{
         StringBuffer buff = new StringBuffer();
         for(ValueMetaInterface om:data.outputRowMeta.getValueMetaList()){
             if(!ti.getString(TRANS_FIELD).equalsIgnoreCase(om.getName())&&!efs.contains(om.getName())){
-            	buff.append(fbf+outputRow[getFieldIndex(om.getName())]+fbf+fgf);
+                Object obj = outputRow[getFieldIndex(om.getName())];
+                if(obj==null){
+                    obj = "";
+                }
+            	buff.append(fbf+obj+fbf+fgf);
             }
         }
         String result = buff.substring(0, buff.length()-fgf.length());
