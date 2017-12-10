@@ -133,7 +133,7 @@ public abstract class EasyExpandRunBase {
     * @param origin 宿主
     * @param comments 描述
     */
-    protected void addField(RowMetaInterface r, String name, int type,
+    public static void addField(RowMetaInterface r, String name, int type,
             int trimType, String origin, String comments) {
         addField(r, name, type, trimType, origin,comments, 0);
     }
@@ -149,7 +149,7 @@ public abstract class EasyExpandRunBase {
     * @param length 长度
     */
     @SuppressWarnings("deprecation")
-    protected void addField(RowMetaInterface r, String name, int type,
+    public static void addField(RowMetaInterface r, String name, int type,
             int trimType, String origin, String comments, int length) {
         ValueMetaInterface v = new ValueMeta();
         v.setName(name.toUpperCase());
