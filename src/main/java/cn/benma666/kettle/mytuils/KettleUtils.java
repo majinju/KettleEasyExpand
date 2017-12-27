@@ -783,11 +783,16 @@ public class KettleUtils {
      * @since JDK 1.6
      */
     public static RepositoryDirectoryInterface getOrMakeDirectory(String parentDirectory,String directoryName) throws KettleException {
-        RepositoryDirectoryInterface dir = repository.findDirectory(parentDirectory+"/"+directoryName);
-        if(dir==null){
-            return repository.createRepositoryDirectory(repository.findDirectory(parentDirectory), directoryName);
+        RepositoryDirectoryInterface parent = repository.findDirectory(parentDirectory);
+        if(StringUtil.isNotBlank(directoryName)){
+            RepositoryDirectoryInterface dir = repository.findDirectory(parentDirectory+"/"+directoryName);
+            if(dir==null){
+                return repository.createRepositoryDirectory(parent, directoryName);
+            }else{
+                return dir;
+            }
         }else{
-            return dir;
+            return parent;
         }
     }
     /**
@@ -799,10 +804,17 @@ public class KettleUtils {
     */
     public static RepositoryDirectoryInterface makeDirs(String directoryName) throws KettleException {
         if(StringUtil.isNotBlank(directoryName)){
-            String parentDirectory = "/";
+            String parentDirectory = "";
             String[] dirArr = directoryName.replace("\\", "/").split("/");
             for(String dirStr:dirArr){
-                parentDirectory = getOrMakeDirectory(parentDirectory, dirStr).getPath();
+                try {
+                    if(StringUtil.isNotBlank(dirStr)){
+                        RepositoryDirectoryInterface p = getOrMakeDirectory(parentDirectory, dirStr);
+                        parentDirectory = p.getPath();
+                    }
+                } catch (Exception e) {
+                    log.error("创建目录失败："+directoryName+","+parentDirectory+","+dirStr, e);
+                }
             }
             return getOrMakeDirectory(parentDirectory,null);
         }else{
