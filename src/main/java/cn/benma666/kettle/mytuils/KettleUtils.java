@@ -1,6 +1,8 @@
 package cn.benma666.kettle.mytuils;
 
+import java.awt.image.BufferedImage;
 import java.lang.Thread.State;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,11 +13,15 @@ import org.pentaho.di.core.KettleEnvironment;
 import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleSecurityException;
+import org.pentaho.di.core.gui.AreaOwner;
+import org.pentaho.di.core.gui.Point;
+import org.pentaho.di.core.gui.SwingGC;
 import org.pentaho.di.core.parameters.NamedParams;
 import org.pentaho.di.core.variables.VariableSpace;
 import org.pentaho.di.job.Job;
 import org.pentaho.di.job.JobHopMeta;
 import org.pentaho.di.job.JobMeta;
+import org.pentaho.di.job.JobPainter;
 import org.pentaho.di.job.entries.job.JobEntryJob;
 import org.pentaho.di.job.entries.special.JobEntrySpecial;
 import org.pentaho.di.job.entries.trans.JobEntryTrans;
@@ -35,6 +41,7 @@ import org.pentaho.di.repository.kdr.KettleDatabaseRepository;
 import org.pentaho.di.repository.kdr.KettleDatabaseRepositoryMeta;
 import org.pentaho.di.trans.TransHopMeta;
 import org.pentaho.di.trans.TransMeta;
+import org.pentaho.di.trans.TransPainter;
 import org.pentaho.di.trans.TransPreviewFactory;
 import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
@@ -597,7 +604,18 @@ public class KettleUtils {
     public static void delJob(long id_job,Repository repository) throws KettleException{
         repository.deleteJob(new LongObjectId(id_job));
     }
-	
+
+    /**
+    * 加载转换 <br/>
+    * @author jingma
+    * @param id 转换id
+    * @return
+    * @throws KettleException
+    */
+    public static TransMeta loadTrans(long id) throws KettleException {
+        return repository.loadTransformation(new LongObjectId(id), null);
+    }
+    
 	/**
 	 * loadTrans:加载转换. <br/>
 	 * @author jingma
@@ -783,11 +801,16 @@ public class KettleUtils {
      * @since JDK 1.6
      */
     public static RepositoryDirectoryInterface getOrMakeDirectory(String parentDirectory,String directoryName) throws KettleException {
-        RepositoryDirectoryInterface dir = repository.findDirectory(parentDirectory+"/"+directoryName);
-        if(dir==null){
-            return repository.createRepositoryDirectory(repository.findDirectory(parentDirectory), directoryName);
+        RepositoryDirectoryInterface parent = repository.findDirectory(parentDirectory);
+        if(StringUtil.isNotBlank(directoryName)){
+            RepositoryDirectoryInterface dir = repository.findDirectory(parentDirectory+"/"+directoryName);
+            if(dir==null){
+                return repository.createRepositoryDirectory(parent, directoryName);
+            }else{
+                return dir;
+            }
         }else{
-            return dir;
+            return parent;
         }
     }
     /**
@@ -799,10 +822,17 @@ public class KettleUtils {
     */
     public static RepositoryDirectoryInterface makeDirs(String directoryName) throws KettleException {
         if(StringUtil.isNotBlank(directoryName)){
-            String parentDirectory = "/";
+            String parentDirectory = "";
             String[] dirArr = directoryName.replace("\\", "/").split("/");
             for(String dirStr:dirArr){
-                parentDirectory = getOrMakeDirectory(parentDirectory, dirStr).getPath();
+                try {
+                    if(StringUtil.isNotBlank(dirStr)){
+                        RepositoryDirectoryInterface p = getOrMakeDirectory(parentDirectory, dirStr);
+                        parentDirectory = p.getPath();
+                    }
+                } catch (Exception e) {
+                    log.error("创建目录失败："+directoryName+","+parentDirectory+","+dirStr, e);
+                }
             }
             return getOrMakeDirectory(parentDirectory,null);
         }else{
@@ -1235,6 +1265,56 @@ public class KettleUtils {
         }else{
             return null;
         }
+    }
+
+    /**
+    * 生成转换图 <br/>
+    * @author jingma
+    * @param transMeta
+    * @return
+    * @throws Exception
+    */
+    public static BufferedImage generateTransformationImage( TransMeta transMeta ) throws Exception {
+      float magnification = 1.0f;
+      Point maximum = transMeta.getMaximum();
+      maximum.multiply( magnification );
+
+      SwingGC gc = new SwingGC( null, maximum, 32, 0, 0 );
+      TransPainter transPainter =
+        new TransPainter(
+          gc, transMeta, maximum, null, null, null, null, null, new ArrayList<AreaOwner>(),
+          new ArrayList<StepMeta>(), 32, 1, 0, 0, true, "Arial", 10 );
+      transPainter.setMagnification( magnification );
+      transPainter.buildTransformationImage();
+
+      BufferedImage image = (BufferedImage) gc.getImage();
+
+      return image;
+    }
+
+    /**
+    * 生成作业图 <br/>
+    * @author jingma
+    * @param jobMeta
+    * @return
+    * @throws Exception
+    */
+    public static BufferedImage generateJobImage( JobMeta jobMeta ) throws Exception {
+      float magnification = 1.0f;
+      Point maximum = jobMeta.getMaximum();
+      maximum.multiply( magnification );
+
+      SwingGC gc = new SwingGC( null, maximum, 32, 0, 0 );
+      JobPainter jobPainter =
+        new JobPainter(
+          gc, jobMeta, maximum, null, null, null, null, null, new ArrayList<AreaOwner>(),
+          new ArrayList<JobEntryCopy>(), 32, 1, 0, 0, true, "Arial", 10 );
+      jobPainter.setMagnification( magnification );
+      jobPainter.drawJob();
+
+      BufferedImage image = (BufferedImage) gc.getImage();
+
+      return image;
     }
 }
 

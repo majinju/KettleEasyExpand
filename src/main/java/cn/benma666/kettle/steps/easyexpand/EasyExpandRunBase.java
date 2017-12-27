@@ -134,10 +134,11 @@ public abstract class EasyExpandRunBase {
     * @param origin 宿主
     * @param comments 描述
     */
-    public static void addField(RowMetaInterface r, String name, int type,
+    protected void addField(RowMetaInterface r, String name, int type,
             int trimType, String origin, String comments) {
         addField(r, name, type, trimType, origin,comments, 0);
     }
+    
     /**
     * 添加字段 <br/>
     * @author jingma
@@ -150,7 +151,7 @@ public abstract class EasyExpandRunBase {
     * @param length 长度
     */
     @SuppressWarnings("deprecation")
-    public static void addField(RowMetaInterface r, String name, int type,
+    protected void addField(RowMetaInterface r, String name, int type,
             int trimType, String origin, String comments, int length) {
         ValueMetaInterface v = new ValueMeta();
         v.setName(name.toUpperCase());
