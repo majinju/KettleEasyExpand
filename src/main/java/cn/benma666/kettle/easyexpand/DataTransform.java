@@ -366,7 +366,7 @@ public class DataTransform extends EasyExpandRunBase{
         JSONObject json = new JSONObject();
         json.put(TRANS_FIELD, "test_date");
         json.put(TRANS_RULE, RULE_DATE_FORMAT);
-        json.put(TRANS_RULE_DATA, "yyyyMMddhhmmss");
+        json.put(TRANS_RULE_DATA, "yyyyMMddHHmmss");
         TransInfo.add(json);
         //身份证格式校验
         json = new JSONObject();

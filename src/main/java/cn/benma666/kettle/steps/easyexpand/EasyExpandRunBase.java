@@ -60,7 +60,8 @@ public abstract class EasyExpandRunBase {
     * @param nextStep
     * @param space
     */
-    public abstract void getFields(RowMetaInterface r, String origin, RowMetaInterface[] info, StepMeta nextStep, VariableSpace space);
+    public abstract void getFields(RowMetaInterface r, String origin, 
+            RowMetaInterface[] info, StepMeta nextStep, VariableSpace space) throws Exception;
 
     /**
     * 开始处理每一行数据 <br/>
