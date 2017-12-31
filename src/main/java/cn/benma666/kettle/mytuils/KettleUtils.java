@@ -802,6 +802,9 @@ public class KettleUtils {
      */
     public static RepositoryDirectoryInterface getOrMakeDirectory(String parentDirectory,String directoryName) throws KettleException {
         RepositoryDirectoryInterface parent = repository.findDirectory(parentDirectory);
+        if(StringUtil.isBlank(parentDirectory)){
+            parent = repository.findDirectory("/");
+        }
         if(StringUtil.isNotBlank(directoryName)){
             RepositoryDirectoryInterface dir = repository.findDirectory(parentDirectory+"/"+directoryName);
             if(dir==null){
