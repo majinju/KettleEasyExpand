@@ -400,16 +400,10 @@ public class KettleUtils {
     * @throws KettleException 
     */
     public static void initEnv() throws KettleException {
-        if(System.getenv("KETTLE_HOME")!=null){
-            System.setProperty("DI_HOME", System.getenv("KETTLE_HOME"));
-            System.setProperty("KETTLE_HOME", System.getenv("KETTLE_HOME"));
-            System.setProperty("org.osjava.sj.root", System.getenv("KETTLE_HOME")+"/simple-jndi");
-            log.debug("KETTLE_HOME配置[能自动加载该目录下plugins中的插件]："+System.getenv("KETTLE_HOME"));
-        }
-        if(System.getenv("KETTLE_JNDI_ROOT")!=null){
-            System.setProperty("org.osjava.sj.root", System.getenv("KETTLE_JNDI_ROOT"));
-            log.debug("Simple-jndi配置根路径："+System.getenv("KETTLE_JNDI_ROOT"));
-        }
+        log.debug("KETTLE_HOME配置[能自动加载该目录下plugins中的插件]："+System.getProperty("KETTLE_HOME"));
+        log.debug("Simple-jndi配置根路径："+System.getProperty("org.osjava.sj.root"));
+        log.debug("日志最大行数："+System.getProperty("KETTLE_MAX_LOG_SIZE_IN_LINES"));
+        log.debug("最大日志管道数："+System.getProperty("KETTLE_MAX_LOGGING_REGISTRY_SIZE"));
         //初始化kettle环境
         if(!KettleEnvironment.isInitialized()){
             KettleEnvironment.init();
