@@ -94,6 +94,16 @@ public class TimingUtil{
 	    String msg=result;
         return msg;
 	}
+	/**
+	* 根据作业id得到定时配置的字符串描述 <br/>
+	* @author jingma
+	* @param jobId
+	* @return
+	* @throws KettleException
+	*/
+	public static String showTextByJobid(int jobId) throws KettleException{
+	    return showText(getFromStart(getStartEntryByJobId(jobId)));
+	}
 
     /**
     * 转换为cron格式的定时配置 ，不需要重复执行的任务不适应与此表达式<br/>
@@ -291,6 +301,13 @@ public class TimingUtil{
         db.update(sql, Integer.parseInt(timing.getString("week_day")),null,"weekDay");
         db.update(sql, timing.getBigDecimal("day_of_month").intValue(),
                 null,"dayOfMonth");
+        
+        //将定时设置更新到r_job表中
+        sql = "update r_job j "
+                + "set j.timing=? "
+                + "where j.id_job=? ";
+        db.update(sql, TimingUtil.showText(timing),jobId);
+        
         return jobId;
     }
 
