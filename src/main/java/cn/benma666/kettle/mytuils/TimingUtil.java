@@ -302,7 +302,7 @@ public class TimingUtil{
         db.update(sql, timing.getBigDecimal("day_of_month").intValue(),
                 null,"dayOfMonth");
         
-        updateTimingToRjob(TimingUtil.showText(timing), jobId);
+        saveTiming(TimingUtil.showText(timing), jobId);
         
         return jobId;
     }
@@ -312,7 +312,7 @@ public class TimingUtil{
     * @param timing
     * @param jobId
     */
-    public static void updateTimingToRjob(String timing, int jobId) {
+    public static void saveTiming(String timing, int jobId) {
         Db.use(KuConst.DS_KETTLE).update("update r_job j set j.timing=? where j.id_job=? ", timing, jobId);
     }
 
