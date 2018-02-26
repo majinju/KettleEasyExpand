@@ -25,6 +25,7 @@ import cn.benma666.kettle.common.Dict;
 import cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase;
 import cn.benma666.myutils.DateUtil;
 import cn.benma666.myutils.SfzhUtil;
+import cn.benma666.myutils.StringUtil;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -44,6 +45,14 @@ public class DataTransform extends EasyExpandRunBase{
     private static final String TRANS_RULE = "转换规则";
     private static final String RESULT_LATER = "结果后缀";
     private static final String TRANS_RULE_DATA = "转换规则数据";
+
+    //规则
+    private static final String RULE_REPLACE = "字符串替换";
+    private static final String RULE_DATE_FORMAT = "时间格式";
+    private static final String RULE_SFZH = "身份证格式";
+    private static final String RULE_DICT = "字典";
+    private static final String RULE_TOJSON = "合并为JSON";
+    private static final String RULE_TOTXT = "合并为TXT";
     
     private static final String TRANS_HBJLS = "合并记录数";
     private static final String TRANS_GROUP_FIELDS = "分组字段";
@@ -52,13 +61,6 @@ public class DataTransform extends EasyExpandRunBase{
     private static final String TRANS_RULE_DATA_FGF = "分隔符";
     private static final String TRANS_RULE_DATA_FBF = "封闭符";
     private static final String TRANS_RULE_DATA_JLFGF = "记录分隔符";
-
-    //规则
-    private static final String RULE_DATE_FORMAT = "时间格式";
-    private static final String RULE_SFZH = "身份证格式";
-    private static final String RULE_DICT = "字典";
-    private static final String RULE_TOJSON = "合并为JSON";
-    private static final String RULE_TOTXT = "合并为TXT";
     
     /**
      * 排出字段集合的Map
@@ -140,6 +142,9 @@ public class DataTransform extends EasyExpandRunBase{
             String txt;
 			JSONObject json;
 			switch (ti.getString(TRANS_RULE)) {
+            case RULE_REPLACE:
+                transReplace(outputRow, ti);
+                break;
             case RULE_DATE_FORMAT:
                 transDateFormat(outputRow[getFieldIndex(ti.getString(TRANS_FIELD))], ti,outputRow);
                 break;
@@ -176,6 +181,30 @@ public class DataTransform extends EasyExpandRunBase{
         return true;
     }
 	/**
+    * 字符串替换 <br/>
+    * @author jingma
+    * @param outputRow
+    * @param ti
+    */
+    private void transReplace(Object[] outputRow, JSONObject ti) {
+        String[] dataArr = ti.getString(TRANS_RULE_DATA).split("->");
+        String toStr = dataArr.length==1?"":dataArr[1];
+        String field = ti.getString(TRANS_FIELD);
+        if(StringUtil.isBlank(field)){
+            //字段为空代表作用于全部字段
+            for(ValueMetaInterface vm:data.outputRowMeta.getValueMetaList()){
+                //类型是字符串的字段,且不为空
+                if(vm.getType()==ValueMetaInterface.TYPE_STRING&&outputRow[getFieldIndex(vm.getName())]!=null){
+                    outputRow[getFieldIndex(vm.getName())] = outputRow[getFieldIndex(vm.getName())].toString()
+                            .replace(dataArr[0], toStr);
+                }
+            }
+        }else{
+            outputRow[getFieldIndex(field)] = outputRow[getFieldIndex(field)].toString()
+                    .replace(dataArr[0], toStr);
+        }
+    }
+    /**
 	 * @return 是否合并记录
 	 */
 	private boolean isHbjl() {
@@ -367,6 +396,12 @@ public class DataTransform extends EasyExpandRunBase{
         json.put(TRANS_FIELD, "test_date");
         json.put(TRANS_RULE, RULE_DATE_FORMAT);
         json.put(TRANS_RULE_DATA, "yyyyMMddHHmmss");
+        TransInfo.add(json);
+        //字符串替换
+        json = new JSONObject();
+        json.put(TRANS_FIELD, "test_str");
+        json.put(TRANS_RULE, RULE_REPLACE);
+        json.put(TRANS_RULE_DATA, "\u0000->");
         TransInfo.add(json);
         //身份证格式校验
         json = new JSONObject();

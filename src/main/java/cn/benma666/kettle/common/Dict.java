@@ -31,6 +31,13 @@ public class Dict {
 	private static Map<String, Map<String,JSONObject>> dictCache = new HashMap<String, Map<String,JSONObject>>();
 
     /**
+    * 清理缓存 <br/>
+    * @author jingma
+    */
+    public static void clearCache(){
+        dictCache.clear();
+    }
+    /**
     * 根据字典类别得到该类别字典的查询SQL <br/>
     * @author jingma
     * @param dictCategory 字典类别
@@ -167,5 +174,17 @@ public class Dict {
             result[1] = UtilConst.DS_SYS;
         }
         return result;
+    }
+    /**
+     * @return dictCache 
+     */
+    public static Map<String, Map<String, JSONObject>> getDictCache() {
+        return dictCache;
+    }
+    /**
+     * @param dictCache the dictCache to set
+     */
+    public static void setDictCache(Map<String, Map<String, JSONObject>> dictCache) {
+        Dict.dictCache = dictCache;
     }
 }
