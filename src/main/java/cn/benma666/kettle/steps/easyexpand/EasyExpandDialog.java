@@ -190,6 +190,7 @@ public class EasyExpandDialog extends BaseStepDialog implements StepDialogInterf
                             wStepname.getText(),variables);
                 } catch (Exception e1) {
                     msg = e1.getMessage();
+                    e1.printStackTrace();
                 }
                 if(StringUtil.isBlank(conf)){
                     wConfigInfo.setText("{}");
