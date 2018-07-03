@@ -959,7 +959,11 @@ public class KettleUtils {
         }
         //采用线程中断结束卡住的线程
         if(job.getState().equals(State.BLOCKED)||job.getState().equals(State.TIMED_WAITING)){
-            job.stop();
+            try {
+                job.stop();
+            } catch (Throwable e) {
+                log.info("直接结束线程异常："+job.getName(), e);
+            }
         }else{
             job.interrupt();
         }
