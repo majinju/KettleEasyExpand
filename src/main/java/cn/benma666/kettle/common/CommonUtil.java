@@ -33,16 +33,22 @@ public class CommonUtil {
     * @return 
     * @throws KettleException 
     */
-    public static DatabaseMeta getOrCreateDB(String dbCode) throws KettleException {
+    public static DatabaseMeta getOrCreateDB(String dbCode) throws Exception {
         ObjectId dbId = null;
         Repository repository = KettleUtils.getInstanceRep();
         dbId = repository.getDatabaseID(dbCode);
         if(dbId==null){
             JSONObject metlDb = Db.use(UtilConst.DS_SYS).
                     findFirst("select * from sys_database db where db.ocode=?", dbCode);
-            DatabaseMeta dataMeta = new DatabaseMeta(dbCode, KettleUtils.dbTypeToKettle(metlDb.getString("type")), 
-                    DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_JNDI], null, dbCode, null, null, null);
-            KettleUtils.saveRepositoryElement(dataMeta);
+            DatabaseMeta dataMeta = null;
+            if(DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_NATIVE].equals(metlDb.getString("access_way"))){
+                dataMeta = new DatabaseMeta(dbCode, KettleUtils.dbTypeToKettle(metlDb.getString("type")), 
+                DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_JNDI], null, dbCode, null, null, null);
+            }else{
+                dataMeta = KettleUtils.createDatabaseMeta(dbCode,metlDb.getString("url"), 
+                        metlDb.getString("username"), metlDb.getString("password"),true,null);
+                KettleUtils.saveRepositoryElement(dataMeta);
+            }
             dbId = repository.getDatabaseID(dbCode);
         }
         return repository.loadDatabaseMeta(dbId, null);
