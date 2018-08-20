@@ -92,6 +92,14 @@ public abstract class EasyExpandRunBase {
     }
 
     /**
+    * 停止操作 <br/>
+    * @author jingma
+    * @throws Exception
+    */
+    public void stopAll(){
+    }
+
+    /**
     * 处理具体每一行数据 <br/>
     * @author jingma
     * @param outputRow
@@ -114,6 +122,7 @@ public abstract class EasyExpandRunBase {
     */
     protected void end() throws Exception{
     }
+    
     /**
     * 获取格式化后的默认JSON配置参数，供使用者方便快捷的修改配置 <br/>
     * @author jingma

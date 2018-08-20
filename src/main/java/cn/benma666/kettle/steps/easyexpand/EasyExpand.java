@@ -106,4 +106,13 @@ public class EasyExpand extends BaseStep implements StepInterface {
 
 		super.dispose(smi, sdi);
 	}
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.pentaho.di.trans.step.StepInterface#stopAll()
+   */
+  public void stopAll() {
+      kui.stopAll();
+      super.stopAll();
+  }
 }
