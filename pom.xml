@@ -21,6 +21,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jdk.version>1.7</jdk.version>
         <junit.version>4.11</junit.version>
+        <kettle.home>d:/NIS/data-integration5.4</kettle.home>
     </properties>
 
     <dependencies>
@@ -69,6 +70,8 @@
                     <compilerArguments>
                   		<extdirs>${env.KETTLE_HOME}/lib</extdirs>
                   		<extdirs>${env.KETTLE_HOME}/libswt/win32</extdirs>
+<!--                   		<extdirs>${kettle.home}/lib</extdirs> -->
+<!--                   		<extdirs>${kettle.home}/libswt/win32</extdirs> -->
                     </compilerArguments>
                 </configuration>
             </plugin>

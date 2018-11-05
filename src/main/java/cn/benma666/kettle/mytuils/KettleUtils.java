@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import org.pentaho.di.core.KettleClientEnvironment;
 import org.pentaho.di.core.KettleEnvironment;
@@ -292,7 +293,7 @@ public class KettleUtils {
 			String description,JSONObject params) throws KettleException{
         initEnv();
 		DatabaseMeta dataMeta = createDatabaseMeta(name, type, access, host,
-                db, port, user, pass, params,true,null);
+                db, port, user, pass, params,true,null,null);
         return createDBRep( dataMeta, id, repName, description);
 	}
     /**
@@ -332,13 +333,13 @@ public class KettleUtils {
             return createDatabaseMeta(name, dbTypeToKettle(urlObj.getString(JdbcUtil.DB_TYPE)), 
                     DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_NATIVE], 
                     urlObj.getString(JdbcUtil.HOSTNAME), urlObj.getString(JdbcUtil.DATABASE_NAME), 
-                    urlObj.getString(JdbcUtil.PORT), user, pass,null,replace,repository);
+                    urlObj.getString(JdbcUtil.PORT), user, pass,null,replace,repository,"select 1 from dual");
         }else if(UtilConst.DS_TYPE_MYSQL.equals(urlObj.getString(JdbcUtil.DB_TYPE))){
             return createDatabaseMeta(name, dbTypeToKettle(urlObj.getString(JdbcUtil.DB_TYPE)), 
                     DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_NATIVE], 
                     urlObj.getString(JdbcUtil.HOSTNAME), urlObj.getString(JdbcUtil.DATABASE_NAME), 
                     urlObj.getString(JdbcUtil.PORT), user, pass,urlObj.getJSONObject(JdbcUtil.PARAM_OBJ),
-                    replace,repository);
+                    replace,repository,"select 1");
         }else{
             return null;
         }
@@ -361,7 +362,7 @@ public class KettleUtils {
     */
     public static DatabaseMeta createDatabaseMeta(String name, String type,
             String access, String host, String db, String port, String user,
-            String pass, JSONObject params,boolean replace,Repository repository) {
+            String pass, JSONObject params,boolean replace,Repository repository,String validationQuery) {
         DatabaseMeta dm = null;
         if(repository!=null){
             try {
@@ -384,6 +385,22 @@ public class KettleUtils {
                 }
             }
             dm.setForcingIdentifiersToLowerCase(true);
+            
+            //设置连接池
+            if(StringUtil.isNotBlank(validationQuery)){
+                dm.setUsingConnectionPool(true);
+                dm.setInitialPoolSize(2);
+                dm.setMaximumPoolSize(5);
+                Properties poolp = new Properties();
+//                poolp.put("testOnBorrow", "true");
+//                poolp.put("testOnReturn", "true");
+                poolp.put("testWhileIdle", "true");
+                poolp.put("timeBetweenEvictionRunsMillis", 5*60*1000);
+                poolp.put("validationQuery", validationQuery);
+                poolp.put("maxActive", 20);
+                dm.setConnectionPoolingProperties(poolp );
+            }
+            
             if(repository!=null){
                 try {
                     repository.save(dm, null, null,true);

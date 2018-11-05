@@ -6,6 +6,7 @@
 
 package cn.benma666.test;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.pentaho.di.core.Const;
 
@@ -15,6 +16,7 @@ import org.pentaho.di.core.Const;
  * @author jingma
  * @version 
  */
+@Ignore
 public class ExceptionTest {
     @SuppressWarnings("null")
     @Test
