@@ -5,7 +5,7 @@
     <groupId>cn.benma666</groupId>
     <artifactId>KettleEasyExpand</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <description>一个简化kettle插件开发的通用插件，采用JSON作为参数配置，省去ui调试设计步骤，只需一个类就可以开发一个插件。</description>
 
     <name>KettleEasyExpand</name>
@@ -29,7 +29,7 @@
         <dependency>
 			<groupId>cn.benma666</groupId>
 			<artifactId>myutils</artifactId>
-			<version>0.1.0</version>
+			<version>0.1.1</version>
         </dependency>
 		<dependency>
 			<groupId>com.github.junrar</groupId>
