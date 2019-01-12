@@ -22,6 +22,7 @@
         <jdk.version>1.7</jdk.version>
         <junit.version>4.11</junit.version>
         <kettle.home>d:/NIS/data-integration5.4</kettle.home>
+		<kettle.version>5.4.1.8-208</kettle.version>
     </properties>
 
     <dependencies>
@@ -48,6 +49,55 @@
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-vfs2 -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>pentaho-kettle</groupId> -->
+<!-- 			<artifactId>kettle-core</artifactId> -->
+<!-- 			<version>${kettle.version}</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.verhas </groupId> -->
+<!-- 			<artifactId>license3j </artifactId> -->
+<!-- 			<version>1.0.7 </version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>pentaho-kettle</groupId> -->
+<!-- 			<artifactId>kettle-dbdialog</artifactId> -->
+<!-- 			<version>${kettle.version}</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>pentaho-kettle</groupId> -->
+<!-- 			<artifactId>kettle-engine</artifactId> -->
+<!-- 			<version>${kettle.version}</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>pentaho-kettle</groupId> -->
+<!-- 			<artifactId>kettle-ui-swt</artifactId> -->
+<!-- 			<version>${kettle.version}</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.eclipse.swt</groupId> -->
+<!-- 			<artifactId>org.eclipse.swt.win32.win32.x86</artifactId> -->
+<!-- 			<version>4.3</version> -->
+<!-- 			<scope>provided</scope> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>pentaho</groupId> -->
+<!-- 			<artifactId>metastore</artifactId> -->
+<!-- 			<version>${kettle.version}</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>simple-jndi</groupId> -->
+<!-- 			<artifactId>simple-jndi</artifactId> -->
+<!-- 			<version>0.11.3</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.commons</groupId> -->
+<!-- 			<artifactId>commons-vfs2</artifactId> -->
+<!-- 			<version>2.2</version> -->
+<!-- 		</dependency> -->
+		
     </dependencies>
     <build>
         <finalName>KettleEasyExpand</finalName>
