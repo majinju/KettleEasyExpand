@@ -398,6 +398,7 @@ public class KettleUtils {
                 poolp.put("timeBetweenEvictionRunsMillis", 5*60*1000);
                 poolp.put("validationQuery", validationQuery);
                 poolp.put("maxActive", 20);
+		poolp.put("characterEncoding", "utf-8");
                 dm.setConnectionPoolingProperties(poolp );
             }
             
