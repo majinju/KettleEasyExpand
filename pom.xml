@@ -1,7 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>cn.benma666</groupId>
     <artifactId>KettleEasyExpand</artifactId>
     <packaging>jar</packaging>
@@ -15,7 +14,23 @@
     	<url>www.benma666.cn</url>
     	<name>benma666</name>
     </organization>
-
+    
+	<distributionManagement>
+        <snapshotRepository>
+          <!-- 这个id需要在setting.xml中设置  --> 
+          <id>snapshots</id>
+          <name>OSS Snapshots Repository</name>
+          <!-- 这里的url就是Issue中回复的snapshots 的repo地址--> 
+          <url>https://oss.sonatype.org/content/repositories/snapshots/</url>  
+        </snapshotRepository>
+        <repository>
+          <id>snapshots</id>
+          <name>OSS Staging Repository</name>
+          <!-- 这里的url就是Issue中回复的staging 的repo地址--> 
+          <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+	</distributionManagement>
+	
     <properties>
         <!-- 主要依赖库的版本定义 -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -118,10 +133,10 @@
                     <showWarnings>true</showWarnings>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <compilerArguments>
-                  		<extdirs>${env.KETTLE_HOME}/lib</extdirs>
-                  		<extdirs>${env.KETTLE_HOME}/libswt/win32</extdirs>
-<!--                   		<extdirs>${kettle.home}/lib</extdirs> -->
-<!--                   		<extdirs>${kettle.home}/libswt/win32</extdirs> -->
+<!--                   		<extdirs>${env.KETTLE_HOME}/lib</extdirs> -->
+<!--                   		<extdirs>${env.KETTLE_HOME}/libswt/win32</extdirs> -->
+                  		<extdirs>${kettle.home}/lib</extdirs>
+                  		<extdirs>${kettle.home}/libswt/win32</extdirs>
                     </compilerArguments>
                 </configuration>
             </plugin>
