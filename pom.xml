@@ -9,11 +9,34 @@
 
     <name>KettleEasyExpand</name>
     <url>http://git.oschina.net/majinju/KettleEasyExpand</url>
-    
+	
     <organization>
     	<url>www.benma666.cn</url>
     	<name>benma666</name>
     </organization>
+    <licenses>
+       <license>
+          <name>GNU GENERAL PUBLIC LICENSE Version 2, June 1991</name>
+          <url>http://www.gnu.org/licenses/old-licenses/gpl-2.0.html</url>
+          <distribution>actable</distribution>
+       </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>majinju</name>
+            <email>jinjuma@yeah.net</email>
+            <organization>benma666</organization>
+            <url>https://github.com/majinju/KettleEasyExpand</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git@github.com:majinju/KettleEasyExpand.git</connection>
+        <developerConnection>scm:git:git@github.com:majinju/KettleEasyExpand.git</developerConnection>
+        <url>https://github.com/majinju/KettleEasyExpand</url>
+        <tag>1.0.1</tag>
+    </scm>
     
 	<distributionManagement>
         <snapshotRepository>
@@ -112,7 +135,6 @@
 <!-- 			<artifactId>commons-vfs2</artifactId> -->
 <!-- 			<version>2.2</version> -->
 <!-- 		</dependency> -->
-		
     </dependencies>
     <build>
         <finalName>KettleEasyExpand</finalName>
@@ -133,10 +155,10 @@
                     <showWarnings>true</showWarnings>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <compilerArguments>
-<!--                   		<extdirs>${env.KETTLE_HOME}/lib</extdirs> -->
-<!--                   		<extdirs>${env.KETTLE_HOME}/libswt/win32</extdirs> -->
-                  		<extdirs>${kettle.home}/lib</extdirs>
-                  		<extdirs>${kettle.home}/libswt/win32</extdirs>
+                  		<extdirs>${env.KETTLE_HOME}/lib</extdirs>
+                  		<extdirs>${env.KETTLE_HOME}/libswt/win32</extdirs>
+<!--                   		<extdirs>${kettle.home}/lib</extdirs> -->
+<!--                   		<extdirs>${kettle.home}/libswt/win32</extdirs> -->
                     </compilerArguments>
                 </configuration>
             </plugin>
@@ -163,6 +185,41 @@
                 <version>2.5</version>
             </plugin>
             
+	      <!-- JavaDoc -->
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-javadoc-plugin</artifactId>
+	        <version>2.9.1</version>
+	        <configuration>
+	          <charset>UTF-8</charset>
+	          <encoding>UTF-8</encoding>
+	        </configuration>
+	        <executions>
+	          <execution>
+	            <id>attach-javadocs</id>
+	            <phase>package</phase>
+	            <goals>
+	              <goal>jar</goal>
+	            </goals>
+	          </execution>
+	        </executions>
+	      </plugin>
+	
+	      <!-- GPG -->
+	      <!-- <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-gpg-plugin</artifactId>
+	        <version>1.5</version>
+	        <executions>
+	          <execution>
+	            <id>sign-artifacts</id>
+	            <phase>verify</phase>
+	            <goals>
+	              <goal>sign</goal>
+	            </goals>
+	          </execution>
+	        </executions>
+	      </plugin> -->
         </plugins>
     </build>
 </project>

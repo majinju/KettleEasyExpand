@@ -8,7 +8,6 @@ package cn.benma666.kettle.ljq;
 
 import cn.benma666.domain.SysSjglSjdx;
 import cn.benma666.myutils.JsonResult;
-import cn.benma666.myutils.StringUtil;
 import cn.benma666.sjgl.DefaultLjq;
 import cn.benma666.sjgl.LjqInterface;
 
@@ -36,23 +35,9 @@ public class JobLjq extends DefaultLjq{
             //删除相关字段
             result = super.plcl(sjdx, params);
             return result;
-        case "fzdx":
-            //复制对象
-            count = 0;
-            for(String id:(String[])params.get(KEY_IDS_ARRAY)){
-                //获取对象
-                SysSjglSjdx newsjdx = sqlManager.single(SysSjglSjdx.class, id);
-                newsjdx.setId(StringUtil.getUUIDUpperStr());
-                newsjdx.setDxdm(newsjdx.getDxdm()+"_"+db.getCurrentDateStr14());
-                newsjdx.setDxmc(newsjdx.getDxmc()+"-复制品");
-                sqlManager.insert(newsjdx);
-                //复制字段
-                params.put("oldSjdxId", id);
-                params.put("newSjdx", newsjdx);
-                result = DefaultLjq.getDefaultSql(newsjdx, "fzzd", params);
-//                sqlManager.executeUpdate(result.getMsg(), params);
-                count++;
-            }
+        case "qd":
+            //启动作业
+            //调用远程接口
             return success("成功复制对象个数："+count);
         default:
             return super.plcl(sjdx, params);
