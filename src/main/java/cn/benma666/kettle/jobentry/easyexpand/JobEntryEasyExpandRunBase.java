@@ -9,6 +9,8 @@ package cn.benma666.kettle.jobentry.easyexpand;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import cn.benma666.km.job.AbsJob;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
@@ -18,8 +20,11 @@ import com.alibaba.fastjson.JSONObject;
  * @author jingma
  * @version 
  */
-public abstract class JobEntryEasyExpandRunBase {
-    protected Log log = LogFactory.getLog(getClass());
+public abstract class JobEntryEasyExpandRunBase{
+    /**
+    * 日志
+    */
+    private static Log log = LogFactory.getLog(AbsJob.class);
     /**
     * 配置信息
     */

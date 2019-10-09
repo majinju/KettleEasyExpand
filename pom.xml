@@ -4,7 +4,7 @@
     <groupId>cn.benma666</groupId>
     <artifactId>KettleEasyExpand</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.1</version>
+    <version>1.1.1</version>
     <description>一个简化kettle插件开发的通用插件，采用JSON作为参数配置，省去ui调试设计步骤，只需一个类就可以开发一个插件。</description>
 
     <name>KettleEasyExpand</name>
@@ -60,7 +60,7 @@
         <jdk.version>1.7</jdk.version>
         <junit.version>4.11</junit.version>
         <kettle.home>d:/NIS/data-integration5.4</kettle.home>
-		<kettle.version>5.4.1.8-208</kettle.version>
+		<kettle.version>5.4.1.8-209</kettle.version>
     </properties>
 
     <dependencies>
@@ -82,12 +82,18 @@
 			</exclusions>
 		</dependency>
 		<dependency>
+		  <groupId>org.quartz-scheduler</groupId>
+		  <artifactId>quartz</artifactId>
+		  <version>2.2.2</version>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
 		
+		<!-- kettle start-->
 		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-vfs2 -->
 <!-- 		<dependency> -->
 <!-- 			<groupId>pentaho-kettle</groupId> -->
@@ -135,6 +141,12 @@
 <!-- 			<artifactId>commons-vfs2</artifactId> -->
 <!-- 			<version>2.2</version> -->
 <!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.commons</groupId> -->
+<!-- 			<artifactId>commons-lang3</artifactId> -->
+<!-- 			<version>3.4</version> -->
+<!-- 		</dependency> -->
+		<!-- kettle end-->
     </dependencies>
     <build>
         <finalName>KettleEasyExpand</finalName>
