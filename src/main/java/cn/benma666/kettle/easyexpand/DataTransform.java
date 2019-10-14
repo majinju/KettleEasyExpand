@@ -21,7 +21,7 @@ import org.pentaho.di.core.variables.VariableSpace;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.StepMeta;
 
-import cn.benma666.kettle.common.Dict;
+import cn.benma666.iframe.DictManager;
 import cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase;
 import cn.benma666.myutils.DateUtil;
 import cn.benma666.myutils.SfzhUtil;
@@ -312,7 +312,7 @@ public class DataTransform extends EasyExpandRunBase{
         if(object==null){
             return;
         }
-        String result = Dict.dictValue(ti.getString(TRANS_RULE_DATA), object.toString());
+        String result = DictManager.zdMcByDm(ti.getString(TRANS_RULE_DATA), object.toString());
         outputRow[getFieldIndex(ti)] = result;
     }
     /**

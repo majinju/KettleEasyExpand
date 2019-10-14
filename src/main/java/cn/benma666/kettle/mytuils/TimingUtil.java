@@ -1,9 +1,4 @@
-/**
- * Copyright (c) 2013-2016, Jieven. All rights reserved.
- *
- * Licensed under the GPL license: http://www.gnu.org/licenses/gpl.txt
- * To use it on other terms please contact us at 1623736450@qq.com
- */
+
 package cn.benma666.kettle.mytuils;
 
 import java.util.HashMap;
@@ -17,8 +12,9 @@ import org.pentaho.di.repository.LongObjectId;
 
 import cn.benma666.constants.UtilConst;
 import cn.benma666.db.Db;
-import cn.benma666.kettle.common.Dict;
+import cn.benma666.iframe.DictManager;
 import cn.benma666.kettle.common.KuConst;
+import cn.benma666.km.job.JobManager;
 import cn.benma666.myutils.StringUtil;
 
 import com.alibaba.fastjson.JSONObject;
@@ -50,7 +46,7 @@ public class TimingUtil{
         startTimingMap.put("weekDay", "week_day");
         startTimingMap.put("dayOfMonth", "day_of_month");
         //设置开始控件类型id
-        TimingUtil.startTypeId = TypeUtils.castToInt(Db.use(KuConst.DS_KETTLE).queryStr(
+        TimingUtil.startTypeId = TypeUtils.castToInt(JobManager.kettledb.queryStr(
                 "select jt.id_jobentry_type from r_jobentry_type jt where jt.code='SPECIAL'"));
     }
 	
@@ -82,7 +78,7 @@ public class TimingUtil{
             result = "一天的"+hour+"点"+minutes+"分执行一次";
         }else if(KuConst.SCHEDULER_TYPE_WEEK.equals(schedulerType)){
             String weekDay = timing.get("week_day").toString();
-            String week = Dict.dictValue(UtilConst.DICT_CATEGORY_WEEK_DAY, weekDay);
+            String week = DictManager.zdMcByDm(UtilConst.DICT_CATEGORY_WEEK_DAY, weekDay);
             result = week + "的"+hour+"点"+minutes+"分执行一次";
         }else if(KuConst.SCHEDULER_TYPE_MONTH.equals(schedulerType)){
             String dayOfMonth = timing.get("day_of_month").toString();
@@ -136,7 +132,7 @@ public class TimingUtil{
             result = "0 "+minutes+" "+hour+" * * *";
         }else if(KuConst.SCHEDULER_TYPE_WEEK.equals(schedulerType)){
             String weekDay = timing.get("week_day").toString();
-            String week = Dict.dictValue(UtilConst.DICT_CATEGORY_WEEK_DAY, weekDay);
+            String week = DictManager.zdMcByDm(UtilConst.DICT_CATEGORY_WEEK_DAY, weekDay);
             result = "0 "+minutes+" "+hour+" * * "+week+" ";
         }else if(KuConst.SCHEDULER_TYPE_MONTH.equals(schedulerType)){
             String dayOfMonth = timing.get("day_of_month").toString();
@@ -153,13 +149,13 @@ public class TimingUtil{
     * @return SATRT控件实体
     */
     public static JSONObject getTimingByJobId(int jobId) {
-        Integer startId = getStartIdByJobId(KuConst.DS_KETTLE, jobId);
+        Integer startId = getStartIdByJobId(jobId);
         if(startId==null){
             return null;
         }
         String sql = "select ja.value_num,ja.value_str,ja.code from r_jobentry_attribute ja "
                 + "where ja.id_jobentry=?";
-        List<JSONObject> records = Db.use(KuConst.DS_KETTLE).find(sql, startId);
+        List<JSONObject> records = JobManager.kettledb.find(sql, startId);
         JSONObject result = new JSONObject();
         for(JSONObject record:records){
             if(StringUtil.isNotBlank(record.getString("value_str"))){
@@ -175,24 +171,12 @@ public class TimingUtil{
     /**
     * 通过作业ID获取对应的START控件 <br/>
     * @author jingma
-    * @param dbCode 所在资源库代码
     * @param jobId 作业ID
     * @return SATRT控件实体
      * @throws KettleException 
     */
     public static JobEntrySpecial getStartEntryByJobId(int jobId) throws KettleException {
-        return getStartEntryByJobId(KuConst.DS_KETTLE, jobId);
-    }
-    /**
-    * 通过作业ID获取对应的START控件 <br/>
-    * @author jingma
-    * @param dbCode 所在资源库代码
-    * @param jobId 作业ID
-    * @return SATRT控件实体
-     * @throws KettleException 
-    */
-    public static JobEntrySpecial getStartEntryByJobId(String dbCode,int jobId) throws KettleException {
-        Integer startId = getStartIdByJobId(dbCode, jobId);
+        Integer startId = getStartIdByJobId( jobId);
         if(startId==null){
             return null;
         }
@@ -203,15 +187,14 @@ public class TimingUtil{
     /**
     * 根据作业id获取该作业的开始控件id <br/>
     * @author jingma
-    * @param dbCode
     * @param jobId
     * @return
     */
-    public static Integer getStartIdByJobId(String dbCode, int jobId) {
+    public static Integer getStartIdByJobId(int jobId) {
         //START控件的类型编号是74，每个JOB只有一个START控件，所有可以唯一确定
         String sql = "select je.id_jobentry from r_jobentry je where "
                 + "je.id_job=? and je.id_jobentry_type=?";
-        JSONObject startIdObj = Db.use(dbCode).findFirst(sql, jobId,startTypeId);
+        JSONObject startIdObj = JobManager.kettledb.findFirst(sql, jobId,startTypeId);
         if(startIdObj == null){
             return null;
         }
@@ -279,7 +262,7 @@ public class TimingUtil{
     */
     public static int saveTimingToKettle2(JSONObject timing) throws KettleException {
         int jobId = Integer.parseInt(timing.getString(UtilConst.FIELD_OID));
-        Integer startId = getStartIdByJobId(KuConst.DS_KETTLE, jobId);
+        Integer startId = getStartIdByJobId(jobId);
         if(startId==null){
             return 0;
         }
@@ -287,7 +270,7 @@ public class TimingUtil{
                 + "set ja.VALUE_NUM=?,ja.VALUE_STR=? "
                 + "where ja.id_jobentry="+startId
                 + " and ja.code=?";
-        Db db = Db.use(KuConst.DS_KETTLE);
+        Db db = JobManager.kettledb;
         db.update(sql, 0,UtilConst.WHETHER_TRUE.equals(timing.getString("is_repeat"))?"Y":"N",
                 "repeat");
         db.update(sql, Integer.parseInt(timing.getString("scheduler_type")),
@@ -303,7 +286,6 @@ public class TimingUtil{
                 null,"dayOfMonth");
         
         saveTiming(TimingUtil.showText(timing), jobId);
-        
         return jobId;
     }
     /**
@@ -313,7 +295,7 @@ public class TimingUtil{
     * @param jobId
     */
     public static void saveTiming(String timing, int jobId) {
-        Db.use(KuConst.DS_KETTLE).update("update r_job j set j.timing=? where j.id_job=? ", timing, jobId);
+        JobManager.kettledb.update("update r_job j set j.timing=? where j.id_job=? ", timing, jobId);
     }
 
     /**

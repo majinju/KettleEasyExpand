@@ -14,6 +14,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.beetl.sql.core.SQLManager;
 import org.osjava.sj.loader.SJDataSource;
 import org.pentaho.di.core.database.util.DatabaseUtil;
 import org.pentaho.di.core.exception.KettleException;
@@ -55,9 +56,11 @@ public class Db extends cn.benma666.db.Db{
             DataSource dataSource = ( new DatabaseUtil() ).getNamedDataSource( dbCode );
             return new Db(dataSource,dbCode);
         } catch (KettleException e) {
-            log.error("获取数据库失败:"+dbCode, e);
+            //只需在jndi中配置sjsj数据库即可，其他数据源使用myservice中配置的数据源
+//            log.debug("获取数据库失败:"+dbCode, e);
         }
-        return null;
+        cn.benma666.db.Db tdb = cn.benma666.db.Db.use(dbCode);
+        return new Db(tdb.getSqlManager(),dbCode,tdb.getDbType());
     }
     /**
     * 获取数据库操作对象 <br/>
@@ -102,6 +105,9 @@ public class Db extends cn.benma666.db.Db{
     
     public Db(DataSource dataSource,String dbCode) {
         super(dbCode, dataSource, getDbtypeByDatasource(dataSource));
+    }
+    public Db(SQLManager sm,String dbCode,String dbType) {
+        super(dbCode, sm,dbType);
     }
     /**
     * 根据数据源获取数据库类型 <br/>

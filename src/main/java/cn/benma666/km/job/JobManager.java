@@ -34,15 +34,18 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.PersistJobDataAfterExecution;
 
 import cn.benma666.constants.UtilConst;
-import cn.benma666.db.Db;
+import cn.benma666.domain.SysSjglSjdx;
+import cn.benma666.iframe.BasicObject;
+import cn.benma666.iframe.DictManager;
 import cn.benma666.job.AbsJob;
-import cn.benma666.kettle.common.Dict;
-import cn.benma666.kettle.common.KuConst;
 import cn.benma666.kettle.loglistener.FileLoggingEventListener;
+import cn.benma666.kettle.mytuils.Db;
 import cn.benma666.kettle.mytuils.KettleUtils;
 import cn.benma666.kettle.mytuils.TimingUtil;
 import cn.benma666.myutils.JsonUtil;
 import cn.benma666.myutils.StringUtil;
+import cn.benma666.sjgl.DefaultLjq;
+import cn.benma666.sjgl.LjqInterface;
 import cn.benma666.web.SConf;
 
 import com.alibaba.fastjson.JSON;
@@ -63,13 +66,17 @@ public class JobManager extends AbsJob {
     private static Log log = LogFactory.getLog(JobManager.class);
     
     /**
-    * 本应用操作的作业视图
+    * 调度的数据对象
     */
-    public static String jobViewName = "v_job";
+    public static SysSjglSjdx sjdx;
     /**
-     * 本项目代码
-     */
-    public static String projectCode = "KM_LOCALHOST_82";
+    * 数据对象的参数
+    */
+    public static JSONObject myParams;
+    /**
+    * 数据世界的数据库操作对象
+    */
+    public static Db sjsjdb;
     /**
      * 资源库所在数据库操作对象
      */
@@ -86,14 +93,70 @@ public class JobManager extends AbsJob {
     * <作业,JSON作业>
     */
     private static Map<Job,JSONObject> jsonjobMap = new ConcurrentHashMap<Job,JSONObject>();
+    /**
+    * 更新标志
+    */
+    private static Date updateFlag = new Date();
 
     static{
-        System.out.println(JobManager.class.getClassLoader());
-        kettledb = Db.use(KuConst.DS_KETTLE);
-        FileLoggingEventListener.kettledb = kettledb;
-        FileLoggingEventListener.logPatt = Pattern.compile(getLogWarning());
+        keeInit();
+        FileLoggingEventListener.logPatt = Pattern.compile(SConf.getVal("kettle.logWarning"));
+        //获取当前应用调度的kettle数据对象
+        myParams = (JSONObject) DefaultLjq.getJcxxByDxdm(SConf.getVal("ddkettle")).getData();
+        sjdx = (SysSjglSjdx) myParams.get(LjqInterface.KEY_SJDX);
+        kettledb = Db.use(sjdx.getDxzt());
+        KettleUtils.use(sjdx);
     }
-    private static Date updateFlag = new Date();
+
+    /**
+    * kettle插件初始化，做一些原本在web中进行的初始化操作 <br/>
+    * @author jingma
+    */
+    public static void keeInit() {
+        if(!SConf.isInited()){
+            //没初始化则进行初始化操作，此处进行非web场景的初始化
+            //此处需要在kettle的jndi中配置default数据源
+            sjsjdb = Db.use(UtilConst.DEFAULT);
+            BasicObject.initObj();
+            SConf sc = new SConf();
+            //设置加载配置的字典类别
+            List<String> configCodeList = new ArrayList<String>();
+            configCodeList.add("SYS_COMMON_APPCONFIG");
+            configCodeList.add("SYS_KP_APPCONFIG");
+            sc.setConfigCodeList(configCodeList);
+            sc.processProperties(null);
+        }
+    }
+
+    /**
+    * 启动时初始化，运行之前在运行的作业 <br/>
+    * @author jingma
+    * @param view 本应用操作的作业视图
+    * @param string 
+    */
+    public static void init(){
+        try {
+            KettleLogStore.getAppender().addLoggingEventListener( 
+                    new FileLoggingEventListener() );
+        } catch (Exception e1) {
+            log.error("加日志监听器错误", e1);
+        }
+        //获取需要初始化运行的作业
+        String sql = DefaultLjq.getDefaultSql(sjdx, "kettleInitJob", myParams).getMsg();
+        List<JSONObject> list = kettledb.find(sql, Trans.STRING_RUNNING);
+        //更新作业状态为等待中
+        sql = DefaultLjq.getDefaultSql(sjdx, "gxzyzt", myParams).getMsg();
+        kettledb.update(sql, Trans.STRING_WAITING, Trans.STRING_RUNNING);
+        //依次启动
+        for(final JSONObject job:list){
+             try {
+                 startJob(job);
+             } catch (Exception e) {
+                 log.error("启动job失败:"+job, e);
+             }
+        }
+    }
+
     /**
      * Creates a new instance of GenerateDataBill.
      */
@@ -103,7 +166,7 @@ public class JobManager extends AbsJob {
     /**
     * 
     * @throws Exception 
-     * @see cn.benma666.km.job.AbsJob#process(org.quartz.JobExecutionContext)
+    * @see cn.benma666.km.job.AbsJob#process(org.quartz.JobExecutionContext)
     */
     @Override
     protected void process() throws Exception {
@@ -127,7 +190,7 @@ public class JobManager extends AbsJob {
                     //异常停止且如果设定的异常自动重启次数大于已经自动重启的次数则执行自动重启操作
                     if(FileLoggingEventListener.STOP_FAILED.equals(status)&&
                             jsonjob.getIntValue("auto_restart_num")>
-                            jsonjob.getIntValue("auto_restart_num_yj")){
+                            jsonjob.getIntValue("ycqcs")){
                         restartList.add(jsonjob);
                     }
                 }else{
@@ -135,18 +198,7 @@ public class JobManager extends AbsJob {
                     String jlci = job.getLogChannelId();
                     LoggingObject lo = (LoggingObject)lr.getLoggingObject(jlci);
                     if(lo!=null){
-                        lo.setRegistrationDate(new Date());
-//                        List<String> l = lr.getChildrenMap().get(jlci);
-//                        if(l!=null){
-//                        //有多线程问题
-//                            for(String lci:l){
-//                                lo = (LoggingObject)lr.getLoggingObject(lci);
-//                                if(lo!=null&&lo.getParent()!=null&&jlci.equals(lo.getParent().getLogChannelId())
-//                                        &&LoggingObjectType.JOBENTRY.equals(lo.getObjectType())){
-//                                    lo.setRegistrationDate(new Date());
-//                                }
-//                            }
-//                        }
+                      lo.setRegistrationDate(new Date());
                       Map<String,LoggingObject> loMap = new HashMap<String, LoggingObject>();
                       for(String lci:lr.getLogChannelChildren(jlci)){
                           lo = (LoggingObject)lr.getLoggingObject(lci);
@@ -182,7 +234,7 @@ public class JobManager extends AbsJob {
         for(JSONObject jsonjob:restartList){
             startJob(jsonjob);
             //已重启次数+1
-            jsonjob.put("auto_restart_num_yj",jsonjob.getIntValue("auto_restart_num_yj")+1);
+            jsonjob.put("ycqcs",jsonjob.getIntValue("ycqcs")+1);
             info("异常停止，自动重启："+jsonjob);
         }
     }
@@ -220,36 +272,6 @@ public class JobManager extends AbsJob {
     }
 
     /**
-    * 启动时初始化，运行之前在运行的作业 <br/>
-    * @author jingma
-    * @param view 本应用操作的作业视图
-    * @param string 
-    */
-    public static void init(String view, String projectCode){
-        setJobViewName(view);
-        setProjectCode(projectCode);
-
-        try {
-            KettleLogStore.getAppender().addLoggingEventListener( 
-                    new FileLoggingEventListener() );
-        } catch (Exception e1) {
-            log.error("加日志监听器错误", e1);
-        }
-        
-        String sql = "select * from "+getJobViewName()+" j where run_status=? and project_code = ? order by oorder asc,last_update desc";
-        List<JSONObject> list = kettledb.find(sql, Trans.STRING_RUNNING,getProjectCode());
-        kettledb.update("update r_job j set run_status=? where run_status=? and project_code = ?", 
-                Trans.STRING_WAITING, Trans.STRING_RUNNING,getProjectCode());
-        for(final JSONObject job:list){
-             try {
-                 startJob(job);
-             } catch (Exception e) {
-                 log.error("启动job失败:"+job, e);
-             }
-        }
-    }
-
-    /**
     * 启动作业 <br/>
     * @author jingma
     * @param jobJson 作业id
@@ -272,8 +294,8 @@ public class JobManager extends AbsJob {
             jm.setParameterValue(param.getString(UtilConst.FIELD_OCODE),
                     param.getString("value"));
         }
-        jm.setLogLevel(LogLevel.getLogLevelForCode(Dict.dictValue("KETTLE_LOG_LEVEL", jobJson.getString("log_level"))));
-        Job job = new Job(KettleUtils.getInstanceRep(), jm);
+        jm.setLogLevel(LogLevel.getLogLevelForCode(DictManager.zdMcByDm("KETTLE_LOG_LEVEL", jobJson.getString("log_level"))));
+        Job job = new Job(KettleUtils.use(sjdx), jm);
         job.setLogLevel(jm.getLogLevel());
         jsonjobMap.put(job, jobJson);
 
@@ -358,7 +380,7 @@ public class JobManager extends AbsJob {
     }
 
     /**
-    *  <br/>
+    * 获取作业图 <br/>
     * @author jingma
     * @param idJob
      * @return 
@@ -376,7 +398,7 @@ public class JobManager extends AbsJob {
     }
 
     /**
-    *  <br/>
+    * 获取转换图 <br/>
     * @author jingma
     * @param idJob
      * @return 
@@ -393,64 +415,23 @@ public class JobManager extends AbsJob {
 //        params.put(WRITE_LOG_FILE, writeLogFile);
         return JSON.toJSONString(params, true);
     }
-
     /**
      * @return writeLogFile 
      */
     public static Boolean isWriteLogFile() {
         return Boolean.valueOf(SConf.getVal("kettle.writeLogFile"));
     }
-
     /**
      * @return logFileRoot 
      */
     public static String getLogFileRoot() {
         return SConf.getVal("kettle.logFileRoot");
     }
-    
     /**
      * @return logFileSize 
      */
     public static double getLogFileSize() {
         return Double.parseDouble(SConf.getVal("kettle.logFileSize"));
-    }
-
-    
-    /**
-     * @return logWarning 
-     */
-    public static String getLogWarning() {
-        return SConf.getVal("kettle.logWarning");
-    }
-
-    /**
-     * @return jobViewName 
-     */
-    public static String getJobViewName() {
-        return jobViewName;
-    }
-
-    /**
-     * @param jobViewName the jobViewName to set
-     */
-    public static void setJobViewName(String jobViewName) {
-        if(jobViewName!=null){
-            JobManager.jobViewName = jobViewName;
-        }
-    }
-    /**
-     * @return projectCode 
-     */
-    public static String getProjectCode() {
-        return projectCode;
-    }
-    /**
-     * @param projectCode the projectCode to set
-     */
-    public static void setProjectCode(String projectCode) {
-        if(projectCode!=null){
-            JobManager.projectCode = projectCode;
-        }
     }
     /**
      * @return jobMap 
@@ -458,5 +439,4 @@ public class JobManager extends AbsJob {
     public static Job getJob(int jobId) {
         return jobMap.get(jobId+"");
     }
-    
 }

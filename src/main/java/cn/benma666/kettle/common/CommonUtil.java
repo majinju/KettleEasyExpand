@@ -11,9 +11,9 @@ import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.repository.ObjectId;
 import org.pentaho.di.repository.Repository;
 
-import cn.benma666.constants.UtilConst;
-import cn.benma666.kettle.mytuils.Db;
+import cn.benma666.iframe.DictManager;
 import cn.benma666.kettle.mytuils.KettleUtils;
+import cn.benma666.sjgl.LjqInterface;
 
 import com.alibaba.fastjson.JSONObject;
 
@@ -38,15 +38,14 @@ public class CommonUtil {
         Repository repository = KettleUtils.getInstanceRep();
         dbId = repository.getDatabaseID(dbCode);
         if(dbId==null){
-            JSONObject metlDb = Db.use(UtilConst.DS_SYS).
-                    findFirst("select * from sys_database db where db.ocode=?", dbCode);
+            JSONObject dbJson = DictManager.zdObjByDmByCache(LjqInterface.ZD_SYS_COMMON_SJZT, dbCode);
             DatabaseMeta dataMeta = null;
-            if(DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_NATIVE].equals(metlDb.getString("access_way"))){
-                dataMeta = new DatabaseMeta(dbCode, KettleUtils.dbTypeToKettle(metlDb.getString("type")), 
+            if(DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_NATIVE].equals(dbJson.getString("fwfj"))){
+                dataMeta = new DatabaseMeta(dbCode, KettleUtils.dbTypeToKettle(dbJson.getString("lx")), 
                 DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_JNDI], null, dbCode, null, null, null);
             }else{
-                dataMeta = KettleUtils.createDatabaseMeta(dbCode,metlDb.getString("url"), 
-                        metlDb.getString("username"), metlDb.getString("password"),true,null);
+                dataMeta = KettleUtils.createDatabaseMeta(dbCode,dbJson.getString("ljc"), 
+                        dbJson.getString("yhm"), dbJson.getString("mm"),true,null);
                 KettleUtils.saveRepositoryElement(dataMeta);
             }
             dbId = repository.getDatabaseID(dbCode);

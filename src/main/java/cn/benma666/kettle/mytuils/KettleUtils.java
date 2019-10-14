@@ -53,8 +53,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.benma666.constants.UtilConst;
+import cn.benma666.domain.SysSjglSjdx;
+import cn.benma666.iframe.DictManager;
+import cn.benma666.myutils.DesUtil;
 import cn.benma666.myutils.JdbcUtil;
 import cn.benma666.myutils.StringUtil;
+import cn.benma666.sjgl.LjqInterface;
+import cn.benma666.web.SConf;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -73,10 +78,6 @@ public class KettleUtils {
 	 */
 	public static Logger log = LoggerFactory.getLogger(KettleUtils.class);
 	/**
-	 * repository:kettle资源库
-	 */
-	private static Repository repository;
-	/**
 	* 转换模板
 	*/
 	private static TransMeta transMetaTemplate;
@@ -84,47 +85,175 @@ public class KettleUtils {
 	* 作业模板
 	*/
 	private static JobMeta jobMetaTemplate;
+    /**
+     * repository:kettle资源库
+     */
+    private static Repository repository;
 	/**
 	* 资源库Map
 	*/
 	private static Map<String,Repository> repMap = new HashMap<String, Repository>();
-	
+
+    /**
+    * 创建JNDI数据库资源库 <br/>
+    * @author jingma
+    * @param name 数据库连接名称
+    * @param type 数据库类型
+    * @param db jndi名称
+    * @return
+    * @throws KettleException
+    */
+    public static Repository createDBRepByJndi(String name, String type,
+            String db) throws KettleException{
+        return createDBRep( name, type, DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_JNDI], 
+                null, db, null, null, null,null);
+    }
+    
+    /**
+     * createDBRep:创建数据库资源库. <br/>
+     * @author jingma
+     * @param name 数据库连接名称
+     * @param type 数据库类型
+     * @param access 访问类型
+     * @param host ip地址
+     * @param db 数据库名称
+     * @param port 端口
+     * @param user 数据库用户名
+     * @param pass 数据库密码
+     * @param params 参数对象
+     * @return 初始化的资源库
+     * @throws KettleException 
+     * @since JDK 1.6
+     */
+    public static Repository createDBRep(String name, String type, String access, String host, 
+            String db, String port, String user, String pass,JSONObject params) throws KettleException{
+        return createDBRep( name, type, access, host, 
+             db, port, user, pass, name, name, name+"数据库资源库",params);
+    }
+    
+    /**
+    * 创建数据库资源库 <br/>
+    * @author jingma
+    * @param name 数据库连接名称
+    * @param url 数据库连接
+    * @param user 数据库用户名
+    * @param pass 数据库密码
+    * @throws Exception 
+    */
+    private static Repository createDBRep(String name, String url, String user,String pass) throws Exception {
+        return createDBRep( name, url, user, pass, name, name, name+"数据库资源库");
+    }
+
+    /**
+    * 创建数据库资源库 <br/>
+    * @author jingma
+    * @param name 数据库连接名称
+    * @param url 数据库连接
+    * @param user 数据库用户名
+    * @param pass 数据库密码
+    * @param id 资源库id
+    * @param repName 资源库名称
+    * @param description 资源库描述
+    * @return
+     * @throws Exception 
+    */
+    private static Repository createDBRep(String name, String url, String user,
+            String pass, String id, String repName, String description) throws Exception {
+        initEnv();
+        DatabaseMeta dataMeta = createDatabaseMeta(name,url, user, pass,true,null);
+        //资源库元对象
+        KettleDatabaseRepositoryMeta kettleDatabaseMeta = 
+                new KettleDatabaseRepositoryMeta(id, repName, description, dataMeta);
+        return createRep(kettleDatabaseMeta, id, repName, description);
+    }
 	/**
-	 * getInstance:获取的单例资源库. <br/>
+	 * createDBRep:创建数据库资源库. <br/>
 	 * @author jingma
+	 * @param name 数据库连接名称
+	 * @param type 数据库类型
+	 * @param access 访问类型
+	 * @param host ip地址
+	 * @param db 数据库名称
+	 * @param port 端口
+	 * @param user 数据库用户名
+	 * @param pass 数据库密码
+	 * @param id 资源库id
+	 * @param repName 资源库名称
+	 * @param description 资源库描述
+     * @param params 参数对象
 	 * @return 已经初始化的资源库
-	 * @throws KettleException 若没有初始化则抛出异常
+	 * @throws KettleException 
 	 * @since JDK 1.6
 	 */
-	public static Repository getInstanceRep() throws KettleException{
-		if(repository!=null){
-			return repository;
-		}else{
-			throw new KettleException("没有初始化资源库");
-		}
-	}
-	/**
-	* 获取指定资源库 <br/>
-	* @author jingma
-	* @param repId 资源id
-	* @return
-	*/
-	public static Repository use(String repId){
-	    return repMap.get(repId);
+	public static Repository createDBRep(String name, String type, String access, String host, 
+			String db, String port, String user, String pass,String id, String repName, 
+			String description,JSONObject params) throws KettleException{
+        initEnv();
+		DatabaseMeta dataMeta = createDatabaseMeta(name, type, access, host,
+                db, port, user, pass, params,true,null,null);
+        //资源库元对象
+        KettleDatabaseRepositoryMeta kettleDatabaseMeta = 
+                new KettleDatabaseRepositoryMeta(id, repName, description, dataMeta);
+        return createRep(kettleDatabaseMeta, id, repName, description);
 	}
     /**
-    * 数据库类型转换为kettle中的数据库类型 <br/>
-    * @author jingma
-    * @param dbType
-    * @return
-    */
-    public static String dbTypeToKettle(String dbType) {
-        if(UtilConst.DS_TYPE_ORACLE.equals(dbType)){
-            return "Oracle";
-        }else if(UtilConst.DS_TYPE_MYSQL.equals(dbType)){
-            return "mysql";
+     * createFileRep:创建文件资源库. <br/>
+     * @author jingma
+     * @param id 资源库id
+     * @param repName 资源库名称
+     * @param description 资源库描述
+     * @param baseDirectory 资源库目录
+     * @return 已经初始化的资源库
+     * @throws KettleException 
+     * @since JDK 1.6
+     */
+    public static Repository createFileRep(String id, String repName, 
+            String description, String baseDirectory) throws KettleException{
+        initEnv();
+        //初始化kettle环境
+        if(!KettleEnvironment.isInitialized()){
+            KettleEnvironment.init();
         }
-        return null;
+        KettleFileRepositoryMeta fileRepMeta = new KettleFileRepositoryMeta( id, repName, description, baseDirectory);
+        return createRep(fileRepMeta, id, repName, description);
+    }
+    /**
+    * 创建资源库 <br/>
+    * @author jingma
+    * @param baseRepositoryMeta 资源库元数据
+    * @param id id
+    * @param repName 名称
+    * @param description 描述
+    * @return
+    * @throws KettleException
+    */
+    public static Repository createRep(BaseRepositoryMeta baseRepositoryMeta,
+            String id, String repName, String description) throws KettleException{
+        if(use(id)!=null){
+            if(repository.getName().equals(use(id).getName())){
+                repository = null;
+            }
+            use(id).disconnect();
+        }
+        Repository repository = null;
+        if(baseRepositoryMeta instanceof KettleDatabaseRepositoryMeta){
+            //创建资源库对象
+            repository = new KettleDatabaseRepository();
+            //给资源库赋值
+            repository.init((KettleDatabaseRepositoryMeta) baseRepositoryMeta);
+        }else{
+            //创建资源库对象
+            repository = new KettleFileRepository();
+            //给资源库赋值
+            repository.init((KettleFileRepositoryMeta) baseRepositoryMeta);
+        }
+        //第一个创建的资源库是默认操作的资源库
+        if(KettleUtils.repository==null){
+            KettleUtils.repository = repository;
+        }
+        repMap.put(id, repository);
+        log.info(repository.getName()+"资源库初始化成功");
+        return repository;
     }
     /**
     * 连接kettle资源库 <br/>
@@ -178,141 +307,145 @@ public class KettleUtils {
         KettleUtils.createDBRep(name, dbTypeToKettle(type), access, host, db, port, user, pass,params);
         KettleUtils.connect(kuser,kpass);
     }
+	/**
+	 * connect:连接资源库. <br/>
+	 * @author jingma
+	 * @return 连接后的资源库
+	 * @throws KettleSecurityException
+	 * @throws KettleException
+	 * @since JDK 1.6
+	 */
+	public static Repository connect() throws KettleSecurityException, KettleException{
+		return connect(null,null);
+	}
 	
 	/**
-	 * createFileRep:创建文件资源库. <br/>
+	 * connect:连接资源库. <br/>
 	 * @author jingma
-	 * @param id 资源库id
-	 * @param repName 资源库名称
-	 * @param description 资源库描述
-	 * @param baseDirectory 资源库目录
-	 * @return 已经初始化的资源库
-	 * @throws KettleException 
+	 * @param username 资源库用户名
+	 * @param password 资源库密码
+	 * @return 连接后的资源库
+	 * @throws KettleSecurityException
+	 * @throws KettleException
 	 * @since JDK 1.6
 	 */
-	public static Repository createFileRep(String id, String repName, 
-	        String description, String baseDirectory) throws KettleException{
-	    initEnv();
-        //初始化kettle环境
-        if(!KettleEnvironment.isInitialized()){
-            KettleEnvironment.init();
-        }
-		KettleFileRepositoryMeta fileRepMeta = new KettleFileRepositoryMeta( id, repName, description, baseDirectory);
-        return createRep(fileRepMeta, id, repName, description);
+	public static Repository connect(String username,String password) throws KettleSecurityException, KettleException{
+		repository.connect(username, password);
+		log.info(repository.getName()+"资源库连接成功");
+		return repository;
 	}
-
-    /**
-    * 创建JNDI数据库资源库 <br/>
-    * @author jingma
-    * @param name 数据库连接名称
-    * @param type 数据库类型
-    * @param db jndi名称
-    * @return
-    * @throws KettleException
-    */
-    public static Repository createDBRepByJndi(String name, String type,
-            String db) throws KettleException{
-        return createDBRep( name, type, DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_JNDI], 
-                null, db, null, null, null,null);
-    }
-    /**
-    * 创建数据库资源库 <br/>
-    * @author jingma
-    * @param name 数据库连接名称
-    * @param url 数据库连接
-    * @param user 数据库用户名
-    * @param pass 数据库密码
-    * @throws Exception 
-    */
-    private static Repository createDBRep(String name, String url, String user,String pass) throws Exception {
-        return createDBRep( name, url, user, pass, name, name, name+"数据库资源库");
-    }
     
     /**
-	 * createDBRep:创建数据库资源库. <br/>
-	 * @author jingma
-	 * @param name 数据库连接名称
-	 * @param type 数据库类型
-	 * @param access 访问类型
-	 * @param host ip地址
-	 * @param db 数据库名称
-	 * @param port 端口
-	 * @param user 数据库用户名
-	 * @param pass 数据库密码
-     * @param params 参数对象
-	 * @return 初始化的资源库
-	 * @throws KettleException 
-	 * @since JDK 1.6
-	 */
-	public static Repository createDBRep(String name, String type, String access, String host, 
-			String db, String port, String user, String pass,JSONObject params) throws KettleException{
-		return createDBRep( name, type, access, host, 
-			 db, port, user, pass, name, name, name+"数据库资源库",params);
-	}
-
-    /**
-    * 创建数据库资源库 <br/>
-    * @author jingma
-    * @param name 数据库连接名称
-    * @param url 数据库连接
-    * @param user 数据库用户名
-    * @param pass 数据库密码
-    * @param id 资源库id
-    * @param repName 资源库名称
-    * @param description 资源库描述
-    * @return
-     * @throws Exception 
-    */
-    private static Repository createDBRep(String name, String url, String user,
-            String pass, String id, String repName, String description) throws Exception {
-        initEnv();
-        DatabaseMeta dataMeta = createDatabaseMeta(name,url, user, pass,true,null);
-        return createDBRep( dataMeta, id, repName, description);
-    }
-	/**
-	 * createDBRep:创建数据库资源库. <br/>
-	 * @author jingma
-	 * @param name 数据库连接名称
-	 * @param type 数据库类型
-	 * @param access 访问类型
-	 * @param host ip地址
-	 * @param db 数据库名称
-	 * @param port 端口
-	 * @param user 数据库用户名
-	 * @param pass 数据库密码
-	 * @param id 资源库id
-	 * @param repName 资源库名称
-	 * @param description 资源库描述
-     * @param params 参数对象
-	 * @return 已经初始化的资源库
-	 * @throws KettleException 
-	 * @since JDK 1.6
-	 */
-	public static Repository createDBRep(String name, String type, String access, String host, 
-			String db, String port, String user, String pass,String id, String repName, 
-			String description,JSONObject params) throws KettleException{
-        initEnv();
-		DatabaseMeta dataMeta = createDatabaseMeta(name, type, access, host,
-                db, port, user, pass, params,true,null,null);
-        return createDBRep( dataMeta, id, repName, description);
-	}
-    /**
-     * createDBRep:创建数据库资源库. <br/>
+     * getInstance:获取的单例资源库. <br/>
      * @author jingma
-     * @param dataMeta 数据库
-     * @param id 资源库id
-     * @param repName 资源库名称
-     * @param description 资源库描述
      * @return 已经初始化的资源库
-     * @throws KettleException 
+     * @throws KettleException 若没有初始化则抛出异常
      * @since JDK 1.6
      */
-    public static Repository createDBRep(DatabaseMeta dataMeta,String id, String repName, 
-            String description) throws KettleException{
-        //资源库元对象
-        KettleDatabaseRepositoryMeta kettleDatabaseMeta = 
-                new KettleDatabaseRepositoryMeta(id, repName, description, dataMeta);
-        return createRep(kettleDatabaseMeta, id, repName, description);
+    public static Repository getInstanceRep() throws KettleException{
+        if(repository!=null){
+            return repository;
+        }else{
+            throw new KettleException("没有初始化资源库");
+        }
+    }
+	
+    /**
+    * 获取指定资源库 <br/>
+    * @author jingma
+    * @param repId 资源id
+    * @return
+    */
+    public static Repository use(String repId){
+        Repository rep = repMap.get(repId);
+        return rep;
+    }
+
+    /**
+    * 根据数据对象获取对应kettle资源库 <br/>
+    * @author jingma
+    * @param sjdx kettle管理页面的数据对象
+    * @return 
+    */
+    public static Repository use(SysSjglSjdx sjdx){
+        Repository rep = repMap.get(sjdx.getDxdm());
+        if(rep==null){
+            //还没初始化
+            try {
+                //数据对象的kettle配置
+                JSONObject kzxx = JSON.parseObject(sjdx.getKzxx()).getJSONObject("kettleConfig");
+                JSONObject sjzt = DictManager.zdObjByDmByCache(LjqInterface.ZD_SYS_COMMON_SJZT, sjdx.getDxzt());
+                connectKettle(sjdx.getDxdm(), sjzt.getString("ljc"), sjzt.getString("yhm"), 
+                        DesUtil.decrypt(sjzt.getString("mm"), SConf.getVal("sjzt.mm.ejmm")),
+                        kzxx.getString("kuser"), kzxx.getString("kpass"));
+                rep = repMap.get(sjdx.getDxdm());
+            } catch (Exception e) {
+                log.error("初始化资源库失败："+sjdx, e);
+            }
+        }
+        if(rep==null){
+            //还是没找到就返回默认资源库
+            return repository;
+        }
+        return rep;
+    }
+
+    /**
+    * destroy:释放资源库. <br/>
+    * @author jingma
+    * @param repId 释放指定资源库
+    */
+    public static void destroy(String repId){
+        Repository rep = use(repId);
+        if(rep!=null){
+            rep.disconnect();
+            log.info(rep.getName()+"资源库释放成功");
+            rep = null;
+        }
+    }
+	/**
+	 * destroy:释放资源库. <br/>
+	 * @author jingma
+	 * @since JDK 1.6
+	 */
+	public static void destroy(){
+		if(repository!=null){
+			repository.disconnect();
+			log.info(repository.getName()+"资源库释放成功");
+            repository = null;
+		}
+	}
+	
+    /**
+    * 初始化环境变量 <br/>
+    * @author jingma
+    * @throws KettleException 
+    */
+    public static void initEnv() throws KettleException {
+        //初始化kettle环境
+        if(!KettleEnvironment.isInitialized()){
+            log.debug("KETTLE_HOME配置[能自动加载该目录下plugins中的插件]："+System.getProperty("KETTLE_HOME"));
+            log.debug("Simple-jndi配置根路径："+System.getProperty("org.osjava.sj.root"));
+            log.debug("日志最大行数："+System.getProperty("KETTLE_MAX_LOG_SIZE_IN_LINES"));
+            log.debug("最大日志管道数："+System.getProperty("KETTLE_MAX_LOGGING_REGISTRY_SIZE"));
+            KettleEnvironment.init();
+            KettleClientEnvironment.getInstance().setClient( KettleClientEnvironment.ClientType.SPOON );
+        }
+    }
+	
+    /**
+    * 数据库类型转换为kettle中的数据库类型 <br/>
+    * @author jingma
+    * @param dbType
+    * @return
+    */
+    public static String dbTypeToKettle(String dbType) {
+        if(UtilConst.DS_TYPE_ORACLE.equals(dbType)){
+            return "Oracle";
+        }else if(UtilConst.DS_TYPE_MYSQL.equals(dbType)){
+            return "mysql";
+        }
+        return null;
     }
     /**
     * 创建数据连接元数据对象 <br/>
@@ -365,10 +498,13 @@ public class KettleUtils {
             String pass, JSONObject params,boolean replace,Repository repository,String validationQuery) {
         DatabaseMeta dm = null;
         if(repository!=null){
+            //已有资源库
             try {
                 ObjectId dbId = repository.getDatabaseID(name);
                 if(dbId!=null){
+                    //已有该名称的数据源
                     if(!replace){
+                        //且不替换则直接返回现有数据源
                         dm = repository.loadDatabaseMeta(dbId, null);
                     }
                 }
@@ -384,6 +520,7 @@ public class KettleUtils {
                     dm.addExtraOption(type, ent.getKey(), ent.getValue()+"");
                 }
             }
+            //设置强制小写，不然mysql好像有问题
             dm.setForcingIdentifiersToLowerCase(true);
             
             //设置连接池
@@ -403,6 +540,7 @@ public class KettleUtils {
             }
             
             if(repository!=null){
+                //存在资源库则保存到资源库
                 try {
                     repository.save(dm, null, null,true);
                 } catch (KettleException e) {
@@ -412,111 +550,6 @@ public class KettleUtils {
         }
         return dm;
     }
-    /**
-    * 初始化环境变量 <br/>
-    * @author jingma
-    * @throws KettleException 
-    */
-    public static void initEnv() throws KettleException {
-        log.debug("KETTLE_HOME配置[能自动加载该目录下plugins中的插件]："+System.getProperty("KETTLE_HOME"));
-        log.debug("Simple-jndi配置根路径："+System.getProperty("org.osjava.sj.root"));
-        log.debug("日志最大行数："+System.getProperty("KETTLE_MAX_LOG_SIZE_IN_LINES"));
-        log.debug("最大日志管道数："+System.getProperty("KETTLE_MAX_LOGGING_REGISTRY_SIZE"));
-        //初始化kettle环境
-        if(!KettleEnvironment.isInitialized()){
-            KettleEnvironment.init();
-            KettleClientEnvironment.getInstance().setClient( KettleClientEnvironment.ClientType.SPOON );
-        }
-    }
-    /**
-    * 创建资源库 <br/>
-    * @author jingma
-    * @param baseRepositoryMeta 资源库元数据
-    * @param id id
-    * @param repName 名称
-    * @param description 描述
-    * @return
-    * @throws KettleException
-    */
-    public static Repository createRep(BaseRepositoryMeta baseRepositoryMeta,
-            String id, String repName, String description) throws KettleException{
-        if(use(id)!=null){
-            if(repository.getName().equals(use(id).getName())){
-                repository = null;
-            }
-            use(id).disconnect();
-        }
-        Repository repository = null;
-        if(baseRepositoryMeta instanceof KettleDatabaseRepositoryMeta){
-            //创建资源库对象
-            repository = new KettleDatabaseRepository();
-            //给资源库赋值
-            repository.init((KettleDatabaseRepositoryMeta) baseRepositoryMeta);
-        }else{
-            //创建资源库对象
-            repository = new KettleFileRepository();
-            //给资源库赋值
-            repository.init((KettleFileRepositoryMeta) baseRepositoryMeta);
-        }
-        //第一个创建的资源库是默认操作的资源库
-        if(KettleUtils.repository==null){
-            KettleUtils.repository = repository;
-        }
-        repMap.put(id, repository);
-        log.info(repository.getName()+"资源库初始化成功");
-        return repository;
-    }
-	
-	/**
-	 * connect:连接资源库. <br/>
-	 * @author jingma
-	 * @return 连接后的资源库
-	 * @throws KettleSecurityException
-	 * @throws KettleException
-	 * @since JDK 1.6
-	 */
-	public static Repository connect() throws KettleSecurityException, KettleException{
-		return connect(null,null);
-	}
-	
-	/**
-	 * connect:连接资源库. <br/>
-	 * @author jingma
-	 * @param username 资源库用户名
-	 * @param password 资源库密码
-	 * @return 连接后的资源库
-	 * @throws KettleSecurityException
-	 * @throws KettleException
-	 * @since JDK 1.6
-	 */
-	public static Repository connect(String username,String password) throws KettleSecurityException, KettleException{
-		repository.connect(username, password);
-		log.info(repository.getName()+"资源库连接成功");
-		return repository;
-	}
-	
-	/**
-	 * setRepository:设置资源库. <br/>
-	 * @author jingma
-	 * @param repository 外部注入资源库
-	 * @since JDK 1.6
-	 */
-	public static void setRepository(Repository repository){
-		KettleUtils.repository = repository;
-	}
-	
-	/**
-	 * destroy:释放资源库. <br/>
-	 * @author jingma
-	 * @since JDK 1.6
-	 */
-	public static void destroy(){
-		if(repository!=null){
-			repository.disconnect();
-			log.info(repository.getName()+"资源库释放成功");
-            repository = null;
-		}
-	}
 
 	/**
 	 * loadJob:通过id加载job. <br/>
@@ -724,7 +757,7 @@ public class KettleUtils {
     * @throws KettleException
     */
     public static void saveRepositoryElement(RepositoryElementInterface repositoryElement) throws KettleException {
-        saveRepositoryElement(getInstanceRep(),repositoryElement);
+        saveRepositoryElement(repository,repositoryElement);
     }
     /**
     * 保存资源库对象 <br/>
@@ -1151,40 +1184,6 @@ public class KettleUtils {
             hop.setToEntry(jm.findJobEntry(hop.getToEntry().getName()));
         }
     }
-
-	/**
-	 * @return transMetaTemplate 
-	 */
-	public static TransMeta getTransMetaTemplate() {
-//		if(transMetaTemplate==null){
-//			setTransMetaTemplate(KettleUtils.loadTrans(SysCode.TRANS_TEMPLATE_NAME, SysCode.TEMPLATE_DIR));
-//		}
-		return transMetaTemplate;
-	}
-
-	/**
-	 * @param transMetaTemplate the transMetaTemplate to set
-	 */
-	public static void setTransMetaTemplate(TransMeta transMetaTemplate) {
-		KettleUtils.transMetaTemplate = transMetaTemplate;
-	}
-
-	/**
-	 * @return jobMetaTemplate 
-	 */
-	public static JobMeta getJobMetaTemplate() {
-//		if(jobMetaTemplate==null){
-//			setJobMetaTemplate(KettleUtils.loadJob(SysCode.JOB_TEMPLATE_NAME, SysCode.TEMPLATE_DIR));
-//		}
-		return jobMetaTemplate;
-	}
-
-	/**
-	 * @param jobMetaTemplate the jobMetaTemplate to set
-	 */
-	public static void setJobMetaTemplate(JobMeta jobMetaTemplate) {
-		KettleUtils.jobMetaTemplate = jobMetaTemplate;
-	}
 	
     /**
     * 获取参数 <br/>
@@ -1334,6 +1333,46 @@ public class KettleUtils {
       BufferedImage image = (BufferedImage) gc.getImage();
 
       return image;
+    }
+    
+    /**
+     * setRepository:设置资源库. <br/>
+     * @author jingma
+     * @param repository 外部注入资源库
+     * @since JDK 1.6
+     */
+    public static void setRepository(Repository repository){
+        KettleUtils.repository = repository;
+    }
+    /**
+     * @return transMetaTemplate 
+     */
+    public static TransMeta getTransMetaTemplate() {
+//      if(transMetaTemplate==null){
+//          setTransMetaTemplate(KettleUtils.loadTrans(SysCode.TRANS_TEMPLATE_NAME, SysCode.TEMPLATE_DIR));
+//      }
+        return transMetaTemplate;
+    }
+    /**
+     * @param transMetaTemplate the transMetaTemplate to set
+     */
+    public static void setTransMetaTemplate(TransMeta transMetaTemplate) {
+        KettleUtils.transMetaTemplate = transMetaTemplate;
+    }
+    /**
+     * @return jobMetaTemplate 
+     */
+    public static JobMeta getJobMetaTemplate() {
+//      if(jobMetaTemplate==null){
+//          setJobMetaTemplate(KettleUtils.loadJob(SysCode.JOB_TEMPLATE_NAME, SysCode.TEMPLATE_DIR));
+//      }
+        return jobMetaTemplate;
+    }
+    /**
+     * @param jobMetaTemplate the jobMetaTemplate to set
+     */
+    public static void setJobMetaTemplate(JobMeta jobMetaTemplate) {
+        KettleUtils.jobMetaTemplate = jobMetaTemplate;
     }
 }
 

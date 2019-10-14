@@ -32,7 +32,6 @@ import org.pentaho.di.core.vfs.KettleVFS;
 import org.pentaho.di.job.Job;
 
 import cn.benma666.constants.UtilConst;
-import cn.benma666.db.Db;
 import cn.benma666.km.job.JobManager;
 import cn.benma666.myutils.DateUtil;
 import cn.benma666.myutils.StringUtil;
@@ -70,10 +69,6 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
     * 日志
     */
     private static Log log = LogFactory.getLog(FileLoggingEventListener.class);
-    /**
-     * 资源库所在数据库操作对象
-     */
-    public static Db kettledb;
     /**
     * 日志预警匹配的正则
     */
@@ -219,7 +214,7 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
             jobName = job.getJobMeta().getName();
         }
         //插入到数据库
-        kettledb.update(
+        JobManager.kettledb.update(
                 "insert into job_warning(id_job,job_name,log_file,msg, log_level, error, "
                 + "subject,log_channel) values(?,?,?,?,?,?,?,?)",
                 idJob, jobName, logFile, msg,logLevel,error,subject,logChannel);
@@ -261,8 +256,8 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
     * @param job
     */
     public static void updateJobStatus(Job job) {
-        kettledb.update(SQL_UPDATE_JOB_STATUS,getJobStatus(job),
-                kettledb.getCurrentDateStr14(),
+        JobManager.kettledb.update(SQL_UPDATE_JOB_STATUS,getJobStatus(job),
+                JobManager.kettledb.getCurrentDateStr14(),
                 Integer.parseInt(job.getObjectId().getId()));
     }
 
@@ -318,7 +313,7 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
                         "HHmmss")+".txt");
         jobLogFile.put(job, logFile);
         //生成日志文件时就插入日志记录，便于用户在运行中查询下载作业日志，因为作业管理只显示最近时间的实时日志
-        kettledb.update(SQL_INSERT_JOB_LOG, jobLogOidMap.get(job),
+        JobManager.kettledb.update(SQL_INSERT_JOB_LOG, jobLogOidMap.get(job),
                 Integer.parseInt(job.getObjectId().getId()),
                 job.getJobMeta().getName(),jobStartDateMap.get(job),
                 logFile.getAbsolutePath());
@@ -331,11 +326,10 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
     * @param job 作业
     */
     public static void updateJoblog(Job job) {
-        kettledb.update(SQL_UPDATE_JOB_LOG, 
-                kettledb.getCurrentDateStr14(),
-                getJobStatus(job),
-                kettledb.getCurrentDateStr14(),
-                jobLogOidMap.get(job));
+        String dqsj = JobManager.kettledb.getCurrentDateStr14();
+        JobManager.kettledb.update(SQL_UPDATE_JOB_LOG, 
+                dqsj,getJobStatus(job),
+                dqsj,jobLogOidMap.get(job));
     }
     /**
     * 获取作业运行状态 <br/>
