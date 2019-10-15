@@ -61,6 +61,11 @@ import com.alibaba.fastjson.JSONObject;
 @DisallowConcurrentExecution
 public class JobManager extends AbsJob {
     /**
+    * 作业主键字段
+    */
+    public static final String ID_JOB = "id_job";
+
+    /**
     * 日志
     */
     private static Log log = LogFactory.getLog(JobManager.class);
@@ -245,7 +250,7 @@ public class JobManager extends AbsJob {
     * @param jobJson
     */
     public static void resetJob(JSONObject jobJson){
-        String jobId = jobJson.getString("id_job");
+        String jobId = jobJson.getString(ID_JOB);
         synchronized (jobMap) {
             if(jobMap.containsKey(jobId)){
                 removeJob(jobMap.get(jobId));
@@ -279,13 +284,13 @@ public class JobManager extends AbsJob {
     * @throws Exception
     */
     public static String startJob(JSONObject jobJson) throws Exception {
-        String jobId = jobJson.getString("id_job");
+        String jobId = jobJson.getString(ID_JOB);
         if(jobMap.containsKey(jobId)){
             return jobMap.get(jobId).getStatus();
         }
         Date start = new Date();
 //        JobMeta jm = KettleUtils.loadJob(jobJson.getString("name"),jobJson.getLong("id_directory"));
-        JobMeta jm = KettleUtils.loadJob(jobJson.getLong("id_job"));
+        JobMeta jm = KettleUtils.loadJob(jobJson.getLong(ID_JOB));
         log.info("加载作业总耗时："+(new Date().getTime()-start.getTime())+","+jobJson);
         Map<String, JSONObject> paramMap = kettledb.
                 findMap("ocode","select * from job_params jp where jp.id_job=?", jobId);
@@ -387,10 +392,10 @@ public class JobManager extends AbsJob {
      * @throws Exception 
     */
     public static BufferedImage getJobImg(JSONObject jobJson) throws Exception {
-        Job job = jobMap.get(jobJson.getString("id_job"));
+        Job job = jobMap.get(jobJson.getString(ID_JOB));
         BufferedImage image = null;
         if(job == null){
-            image = KettleUtils.generateJobImage(KettleUtils.loadJob(jobJson.getLong("id_job")));
+            image = KettleUtils.generateJobImage(KettleUtils.loadJob(jobJson.getLong(ID_JOB)));
         }else{
             image = KettleUtils.generateJobImage(job.getJobMeta());
         }

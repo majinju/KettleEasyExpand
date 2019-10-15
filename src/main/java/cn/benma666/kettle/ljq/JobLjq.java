@@ -6,13 +6,16 @@
 
 package cn.benma666.kettle.ljq;
 
+import java.awt.image.BufferedImage;
 import java.util.List;
 
 import cn.benma666.db.Db;
+import cn.benma666.domain.SysSjglFile;
 import cn.benma666.domain.SysSjglSjdx;
 import cn.benma666.kettle.loglistener.FileLoggingEventListener;
 import cn.benma666.kettle.mytuils.KettleUtils;
 import cn.benma666.km.job.JobManager;
+import cn.benma666.myutils.FileUtil;
 import cn.benma666.myutils.JsonResult;
 import cn.benma666.sjgl.DefaultLjq;
 import cn.benma666.sjgl.LjqInterface;
@@ -55,7 +58,7 @@ public class JobLjq extends DefaultLjq{
             //批量删除作业
             for(JSONObject job : jobs){
                 try {
-                    KettleUtils.delJob(job.getLongValue("id_job"));
+                    KettleUtils.delJob(job.getLongValue(JobManager.ID_JOB));
                 } catch (Exception e) {
                     flag++;
                     log.error("删除job失败:"+job, e);
@@ -78,7 +81,7 @@ public class JobLjq extends DefaultLjq{
                 }
                 //更新作业状态
                 tdb.update(getDefaultSql(sjdx, "gxzyzt", myParams).getMsg(), runStatus,
-                        tdb.getCurrentDateStr14(),job.getString("id_job"));
+                        tdb.getCurrentDateStr14(),job.getString(JobManager.ID_JOB));
             }
             if(flag==0){
                 return success("作业启动成功："+jobs.size());
@@ -90,14 +93,14 @@ public class JobLjq extends DefaultLjq{
             for(JSONObject job : jobs){
                 runStatus = FileLoggingEventListener.STOP_FAILED;
                 try {
-                    runStatus = JobManager.stopJob(job.getString("id_job"));
+                    runStatus = JobManager.stopJob(job.getString(JobManager.ID_JOB));
                 } catch (Exception e) {
                     flag++;
                     log.error("停止job失败:"+job, e);
                 }
                 //更新作业状态
                 tdb.update(getDefaultSql(sjdx, "gxzyzt", myParams).getMsg(), runStatus,
-                        tdb.getCurrentDateStr14(),job.getString("id_job"));
+                        tdb.getCurrentDateStr14(),job.getString(JobManager.ID_JOB));
             }
             if(flag==0){
                 return success("作业停止成功："+jobs.size());
@@ -108,7 +111,7 @@ public class JobLjq extends DefaultLjq{
             //结束作业：强制杀死操作
             for(JSONObject job : jobs){
                 try {
-                    runStatus = JobManager.killJob(job.getString("id_job"));
+                    runStatus = JobManager.killJob(job.getString(JobManager.ID_JOB));
                 } catch (Exception e) {
                     flag++;
                     log.error("结束job失败:"+job, e);
@@ -139,10 +142,27 @@ public class JobLjq extends DefaultLjq{
                 log.error("获取作业目录失败:"+jobJson, e);
                 return error("获取作业目录失败，请查看系统日志分析原因！");
             }
+        case "zyt":
+            //作业图
+            try {
+                SysSjglFile file = new SysSjglFile();
+                file.setWjlx("png");
+                file.setWjm(jobJson.getString("name")+"的作业图");
+                file.setXzms(false);
+                BufferedImage image = JobManager.getJobImg(jobJson);
+                JSONObject r = new JSONObject();
+                r.put(KEY_FILE_BYTES, FileUtil.toBytes(image));
+                r.put(KEY_FILE_OBJ, file);
+                return success("获取作业图成功",r);
+            } catch (Exception e) {
+                flag++;
+                log.error("获取作业图失败:"+jobJson, e);
+                return error("获取作业图失败，请查看系统日志分析原因！");
+            }
         case "rz":
             //作业日志
             try {
-                JSONObject r = JobManager.getLog(jobJson.getString("id_job"),
+                JSONObject r = JobManager.getLog(jobJson.getString(JobManager.ID_JOB),
                         TypeUtils.castToInt(sjdx.get("startLineNr")));
                 if(!r.containsKey("lastLineNr")){
                     r.put("lastLineNr", 0);
