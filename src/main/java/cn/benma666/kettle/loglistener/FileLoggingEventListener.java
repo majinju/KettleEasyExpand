@@ -152,6 +152,9 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
               if(end>1){
                   ll = jobNameLogListener.get(tn.substring(0, end));
               }
+              if (ll == null) {
+                  ll = jobNameLogListener.get(message.getSubject());
+              }
               // 日志没有写入文件
               if (ll != null) {
                   myLogDispose(event, ll.getJob(),message);

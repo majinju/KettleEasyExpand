@@ -8,7 +8,6 @@ package cn.benma666.km.service;
 
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.pentaho.di.core.exception.KettleException;
@@ -25,7 +24,6 @@ import cn.benma666.kettle.mytuils.KettleUtils;
 import cn.benma666.myutils.JsonResult;
 import cn.benma666.myutils.StringUtil;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 /**
@@ -255,56 +253,6 @@ public class JobManagerService extends BasicObject{
         jobJson.put("class_name", km.getClassName());
         jobJson.put("config_info", km.getConfigInfo());
         return jobJson;
-    }
-
-    /**
-    * 删除作业 <br/>
-    * @author jingma
-    * @param jobJson
-     * @throws KettleException 
-    */
-    public static void delJob(JSONObject jobJson) throws KettleException {
-        log.info("删除作业："+jobJson);
-        KettleUtils.delJob(jobJson.getLongValue("id_job"));
-    }
-
-    /**
-    * 复制作业 <br/>
-    * @author jingma
-    * @param paraMap
-    * @return
-    */
-    public static JsonResult copyJob(Map<String, String[]> paraMap) {
-        String[] jobPathArr = paraMap.get("jobPath")[0].replace("\r", "").split("\n");
-        JSONObject yJobJson = JSON.parseObject(paraMap.get("row")[0]);
-        String successJob = "";
-        String failedJob = "";
-        try {
-            JobMeta yJob = KettleUtils.loadJob(yJobJson.getString("name"), yJobJson.getLongValue("id_directory"));
-            for(String jobPath:jobPathArr){
-                jobPath = jobPath.replace("\\", "/");
-                if(!jobPath.startsWith("/")){
-                    jobPath = "/"+jobPath;
-                }
-                String dir = jobPath.substring(0, jobPath.lastIndexOf("/"));
-                String name = jobPath.substring(jobPath.lastIndexOf("/")+1);
-                if(StringUtils.isBlank(dir)){
-                    dir = "/";
-                }
-                if(StringUtils.isBlank(name)){
-                    failedJob += jobPath+"[作业名称不能为空]\n";
-                    continue;
-                }
-                yJob.setName(name);
-                yJob.setRepositoryDirectory(KettleUtils.makeDirs(dir));
-                KettleUtils.saveJob(yJob);
-                successJob += jobPath+"\n";
-            }
-        } catch (Exception e) {
-            log.error("复制作业失败:"+JSON.toJSONString(paraMap), e);
-            return error("复制作业失败："+e.getMessage()+"\n复制成功的作业：\n"+successJob+"\n复制失败的作业：\n"+failedJob);
-        }
-        return success("复制成功的作业：\n"+successJob+"\n复制失败的作业：\n"+failedJob);
     }
 
     /**

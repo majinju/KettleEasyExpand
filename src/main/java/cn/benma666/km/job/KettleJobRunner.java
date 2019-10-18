@@ -9,8 +9,6 @@ package cn.benma666.km.job;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.PersistJobDataAfterExecution;
 
-import cn.benma666.job.AbsJob;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -41,25 +39,25 @@ public class KettleJobRunner extends AbsJob {
     */
     @Override
     protected void process() throws Exception {
-//        JSONArray jobIdList = configInfo.getJSONArray(JOBID_LIST);
-//        String sql = "select * from "+JobManager.getJobViewName()+" j where id_job=?";
-//        //当前就是依次运行，将来根据需要可以考虑其他运行方式
-//        for(Integer jobId:jobIdList.toArray(new Integer[]{})){
-//            JSONObject jobJson = Db.use(KuConst.DS_KETTLE).findFirst(sql, jobId);
-//            if(jobJson != null){
-//                try {
-//                    //此处存在一个作业被多处调用的可能，下一层控制了同一个作业同时只能运行一个，可能造成混乱
-//                    //所以建议一个作业不要多次使用，只能暂时只能靠自觉，瞎搞自己该遭
-//                    JobManager.startJob(jobJson);
-//                    JobManager.getJob(jobId).join();
-//                } catch (Exception e) {
-//                    error("作业启动失败："+jobJson, e);
-//                    break;
-//                }
-//            }else{
-//                error("作业不存在："+jobId);
-//            }
-//        }
+        JSONArray jobIdList = configInfo.getJSONArray(JOBID_LIST);
+        String sql = "select * from r_job j where id_job=?";
+        //当前就是依次运行，将来根据需要可以考虑其他运行方式
+        for(Integer jobId:jobIdList.toArray(new Integer[]{})){
+            JSONObject jobJson = JobManager.kettledb.findFirst(sql, jobId);
+            if(jobJson != null){
+                try {
+                    //此处存在一个作业被多处调用的可能，下一层控制了同一个作业同时只能运行一个，可能造成混乱
+                    //所以建议一个作业不要多次使用，只能暂时只能靠自觉，瞎搞自己该遭
+                    JobManager.startJob(jobJson);
+                    JobManager.getJob(jobId).join();
+                } catch (Exception e) {
+                    error("作业启动失败："+jobJson, e);
+                    break;
+                }
+            }else{
+                error("作业不存在："+jobId);
+            }
+        }
     }
 
     public String getDefaultConfigInfo() throws Exception {

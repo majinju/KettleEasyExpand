@@ -37,7 +37,6 @@ import cn.benma666.constants.UtilConst;
 import cn.benma666.domain.SysSjglSjdx;
 import cn.benma666.iframe.BasicObject;
 import cn.benma666.iframe.DictManager;
-import cn.benma666.job.AbsJob;
 import cn.benma666.kettle.loglistener.FileLoggingEventListener;
 import cn.benma666.kettle.mytuils.Db;
 import cn.benma666.kettle.mytuils.KettleUtils;
@@ -111,6 +110,12 @@ public class JobManager extends AbsJob {
         sjdx = (SysSjglSjdx) myParams.get(LjqInterface.KEY_SJDX);
         kettledb = Db.use(sjdx.getDxzt());
         KettleUtils.use(sjdx);
+        try {
+            KettleLogStore.getAppender().addLoggingEventListener( 
+                    new FileLoggingEventListener() );
+        } catch (Exception e1) {
+            log.error("加日志监听器错误", e1);
+        }
     }
 
     /**
@@ -118,6 +123,8 @@ public class JobManager extends AbsJob {
     * @author jingma
     */
     public static void keeInit() {
+        Class<?> clazz = SConf.class;//String类
+        System.out.println(clazz.getResource(clazz.getSimpleName() + ".class"));
         if(!SConf.isInited()){
             //没初始化则进行初始化操作，此处进行非web场景的初始化
             //此处需要在kettle的jndi中配置default数据源
@@ -140,18 +147,12 @@ public class JobManager extends AbsJob {
     * @param string 
     */
     public static void init(){
-        try {
-            KettleLogStore.getAppender().addLoggingEventListener( 
-                    new FileLoggingEventListener() );
-        } catch (Exception e1) {
-            log.error("加日志监听器错误", e1);
-        }
         //获取需要初始化运行的作业
         String sql = DefaultLjq.getDefaultSql(sjdx, "kettleInitJob", myParams).getMsg();
         List<JSONObject> list = kettledb.find(sql, Trans.STRING_RUNNING);
         //更新作业状态为等待中
-        sql = DefaultLjq.getDefaultSql(sjdx, "gxzyzt", myParams).getMsg();
-        kettledb.update(sql, Trans.STRING_WAITING, Trans.STRING_RUNNING);
+        kettledb.update("update R_JOB j set j.run_status=?,j.last_update=? where j.run_status=?", 
+                Trans.STRING_WAITING,kettledb.getCurrentDateStr14(), Trans.STRING_RUNNING);
         //依次启动
         for(final JSONObject job:list){
              try {
@@ -160,6 +161,7 @@ public class JobManager extends AbsJob {
                  log.error("启动job失败:"+job, e);
              }
         }
+        log.info("初始化自动启动作业数："+list.size());
     }
 
     /**
@@ -198,6 +200,7 @@ public class JobManager extends AbsJob {
                             jsonjob.getIntValue("ycqcs")){
                         restartList.add(jsonjob);
                     }
+                    info("该作业已运行结束："+job.getName());
                 }else{
                     //更新日志对象的注册时间，使存活作业的日志对象不被移除。
                     String jlci = job.getLogChannelId();

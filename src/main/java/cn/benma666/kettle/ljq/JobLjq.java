@@ -22,7 +22,6 @@ import cn.benma666.sjgl.LjqInterface;
 import cn.benma666.web.SConf;
 
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.util.TypeUtils;
 
 /**
  * 作业拦截器 <br/>
@@ -130,7 +129,7 @@ public class JobLjq extends DefaultLjq{
             } catch (Exception e) {
                 flag++;
                 log.error("重置job失败:"+jobJson, e);
-                return error("作业重置失败，请查看系统日志分析原因！");
+                return error("作业重置失败，请查看系统日志分析原因:"+e.getMessage());
             }
         case "ml":
             //作业目录
@@ -140,7 +139,7 @@ public class JobLjq extends DefaultLjq{
             } catch (Exception e) {
                 flag++;
                 log.error("获取作业目录失败:"+jobJson, e);
-                return error("获取作业目录失败，请查看系统日志分析原因！");
+                return error("获取作业目录失败，请查看系统日志分析原因:"+e.getMessage());
             }
         case "zyt":
             //作业图
@@ -157,25 +156,8 @@ public class JobLjq extends DefaultLjq{
             } catch (Exception e) {
                 flag++;
                 log.error("获取作业图失败:"+jobJson, e);
-                return error("获取作业图失败，请查看系统日志分析原因！");
+                return error("获取作业图失败，请查看系统日志分析原因:"+e.getMessage());
             }
-        case "rz":
-            //作业日志
-            try {
-                JSONObject r = JobManager.getLog(jobJson.getString(JobManager.ID_JOB),
-                        TypeUtils.castToInt(sjdx.get("startLineNr")));
-                if(!r.containsKey("lastLineNr")){
-                    r.put("lastLineNr", 0);
-                }
-                return success("获取日志成功",r);
-            } catch (Exception e) {
-                flag++;
-                log.error("获取作业日志失败:"+jobJson, e);
-                return error("获取作业日志失败，请查看系统日志分析原因！");
-            }
-        case "fz":
-            //复制作业
-            return error("暂未实现");
         case "drzy":
             //导入作业
             return error("暂未实现");
