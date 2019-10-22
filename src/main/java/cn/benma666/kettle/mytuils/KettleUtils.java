@@ -3,7 +3,6 @@ package cn.benma666.kettle.mytuils;
 import java.awt.image.BufferedImage;
 import java.lang.Thread.State;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -54,6 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import cn.benma666.constants.UtilConst;
 import cn.benma666.domain.SysSjglSjdx;
+import cn.benma666.iframe.CacheFactory;
 import cn.benma666.iframe.DictManager;
 import cn.benma666.myutils.DesUtil;
 import cn.benma666.myutils.JdbcUtil;
@@ -77,14 +77,6 @@ public class KettleUtils {
 	 * LOG:日志
 	 */
 	public static Logger log = LoggerFactory.getLogger(KettleUtils.class);
-	/**
-	* 转换模板
-	*/
-	private static TransMeta transMetaTemplate;
-	/**
-	* 作业模板
-	*/
-	private static JobMeta jobMetaTemplate;
     /**
      * repository:kettle资源库
      */
@@ -92,7 +84,11 @@ public class KettleUtils {
 	/**
 	* 资源库Map
 	*/
-	private static Map<String,Repository> repMap = new HashMap<String, Repository>();
+	private static Map<String, Object> repMap = CacheFactory.use("kettlePep", CacheFactory.TYPE_MEMORY);
+    /**
+    * kettle模板缓存
+    */
+    private static Map<String, Object> tpMap = CacheFactory.use("kettleTP", CacheFactory.TYPE_MEMORY);
 
     /**
     * 创建JNDI数据库资源库 <br/>
@@ -357,8 +353,11 @@ public class KettleUtils {
     * @return
     */
     public static Repository use(String repId){
-        Repository rep = repMap.get(repId);
-        return rep;
+        Object rep = repMap.get(repId);
+        if(rep==null){
+            return null;
+        }
+        return (Repository) rep;
     }
 
     /**
@@ -368,7 +367,7 @@ public class KettleUtils {
     * @return 
     */
     public static Repository use(SysSjglSjdx sjdx){
-        Repository rep = repMap.get(sjdx.getDxdm());
+        Repository rep = use(sjdx.getDxdm());
         if(rep==null){
             //还没初始化
             try {
@@ -378,7 +377,7 @@ public class KettleUtils {
                 connectKettle(sjdx.getDxdm(), sjzt.getString("ljc"), sjzt.getString("yhm"), 
                         DesUtil.decrypt(sjzt.getString("mm"), SConf.getVal("sjzt.mm.ejmm")),
                         kzxx.getString("kuser"), kzxx.getString("kpass"));
-                rep = repMap.get(sjdx.getDxdm());
+                rep = use(sjdx.getDxdm());
             } catch (Exception e) {
                 log.error("初始化资源库失败："+sjdx, e);
             }
@@ -1334,7 +1333,52 @@ public class KettleUtils {
 
       return image;
     }
-    
+
+    /**
+     * loadTrans:加载作业模板. <br/>
+     * @author jingma
+     * @param jobname 转换名称
+     * @param directory 转换路径
+     * @return 作业元数据
+     * @throws KettleException 
+     * @since JDK 1.6
+     */
+    public static JobMeta loadJobTP(String jobname, String directory) throws KettleException {
+        Object o = tpMap.get(directory+jobname);
+        JobMeta tp = null;
+        if(o==null){
+            tp = loadJob(jobname, directory, repository);
+            tpMap.put(directory+jobname, tp);
+        }else{
+            tp = (JobMeta) o;
+        }
+        tp = (JobMeta) tp.realClone(false);
+        repairHop(tp);
+        return tp;
+    }
+
+    /**
+     * loadTrans:加载转换模板. <br/>
+     * @author jingma
+     * @param transname 转换名称
+     * @param directory 转换路径
+     * @return 转换元数据
+     * @throws KettleException 
+     * @since JDK 1.6
+     */
+    public static TransMeta loadTransTP(String transname, String directory) throws KettleException {
+        Object o = tpMap.get(directory+transname);
+        TransMeta tp = null;
+        if(o==null){
+            tp = loadTrans(transname, directory, repository);
+            tpMap.put(directory+transname, tp);
+        }else{
+            tp = (TransMeta) o;
+        }
+        tp = (TransMeta) tp.realClone(false);
+        repairTransHop(tp);
+        return tp;
+    }
     /**
      * setRepository:设置资源库. <br/>
      * @author jingma
@@ -1343,36 +1387,6 @@ public class KettleUtils {
      */
     public static void setRepository(Repository repository){
         KettleUtils.repository = repository;
-    }
-    /**
-     * @return transMetaTemplate 
-     */
-    public static TransMeta getTransMetaTemplate() {
-//      if(transMetaTemplate==null){
-//          setTransMetaTemplate(KettleUtils.loadTrans(SysCode.TRANS_TEMPLATE_NAME, SysCode.TEMPLATE_DIR));
-//      }
-        return transMetaTemplate;
-    }
-    /**
-     * @param transMetaTemplate the transMetaTemplate to set
-     */
-    public static void setTransMetaTemplate(TransMeta transMetaTemplate) {
-        KettleUtils.transMetaTemplate = transMetaTemplate;
-    }
-    /**
-     * @return jobMetaTemplate 
-     */
-    public static JobMeta getJobMetaTemplate() {
-//      if(jobMetaTemplate==null){
-//          setJobMetaTemplate(KettleUtils.loadJob(SysCode.JOB_TEMPLATE_NAME, SysCode.TEMPLATE_DIR));
-//      }
-        return jobMetaTemplate;
-    }
-    /**
-     * @param jobMetaTemplate the jobMetaTemplate to set
-     */
-    public static void setJobMetaTemplate(JobMeta jobMetaTemplate) {
-        KettleUtils.jobMetaTemplate = jobMetaTemplate;
     }
 }
 

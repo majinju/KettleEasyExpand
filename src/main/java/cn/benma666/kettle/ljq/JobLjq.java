@@ -9,14 +9,22 @@ package cn.benma666.kettle.ljq;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.pentaho.di.job.JobMeta;
+import org.springframework.ui.Model;
+
 import cn.benma666.db.Db;
 import cn.benma666.domain.SysSjglFile;
 import cn.benma666.domain.SysSjglSjdx;
+import cn.benma666.job.JobInterface;
 import cn.benma666.kettle.loglistener.FileLoggingEventListener;
 import cn.benma666.kettle.mytuils.KettleUtils;
 import cn.benma666.km.job.JobManager;
+import cn.benma666.km.service.KettleService;
 import cn.benma666.myutils.FileUtil;
 import cn.benma666.myutils.JsonResult;
+import cn.benma666.myutils.StringUtil;
 import cn.benma666.sjgl.DefaultLjq;
 import cn.benma666.sjgl.LjqInterface;
 import cn.benma666.web.SConf;
@@ -49,9 +57,13 @@ public class JobLjq extends DefaultLjq{
         String runStatus = null;
         //失败的作业数
         int flag = 0;
+        List<JSONObject> jobs = null;
+        JSONObject jobJson = null;
         //作业列表
-        List<JSONObject> jobs = tdb.find(getDefaultSql(sjdx, "getJobByIds", myParams).getMsg());
-        JSONObject jobJson = jobs.get(0);
+        if(myParams.containsKey(KEY_IDS_ARRAY)){
+            jobs = tdb.find(getDefaultSql(sjdx, "getJobByIds", myParams).getMsg());
+            jobJson = jobs.get(0);
+        }
         switch (cllx) {
         case KEY_CLLX_PLSC:
             //批量删除作业
@@ -134,7 +146,7 @@ public class JobLjq extends DefaultLjq{
         case "ml":
             //作业目录
             try {
-                String dir = KettleUtils.getDirectory(Integer.parseInt(jobJson.getString("id_directory")));
+                String dir = KettleUtils.getDirectory(jobJson.getLong("id_directory"));
                 return success("作业目录："+dir);
             } catch (Exception e) {
                 flag++;
@@ -161,8 +173,162 @@ public class JobLjq extends DefaultLjq{
         case "drzy":
             //导入作业
             return error("暂未实现");
+        case "getKmmrpz":
+            //获取KM默认配置
+            try {
+                JSONObject yobj = myParams.getJSONObject(KEY_YOBJ);
+                JSONObject obj = myParams.getJSONObject(KEY_OBJ);
+                obj.putAll(yobj);
+                String kmlm = obj.getString("kmlm");
+                JobInterface ji = (JobInterface) Class.forName(kmlm).newInstance();
+                JSONObject km = new JSONObject();
+                km.put("kmpz", ji.getDefaultConfigInfo());
+                return success("获取成功", km);
+            } catch (Exception e) {
+                log.error("获取配置失败"+sjdx, e);
+                return error("获取配置失败："+e.getMessage());
+            }
+        case "getDxlzMrpz":
+            //获取对象流转默认配置
+            try {
+                JSONObject yobj = myParams.getJSONObject(KEY_YOBJ);
+                JSONObject obj = myParams.getJSONObject(KEY_OBJ);
+                obj.putAll(yobj);
+                return KettleService.getDxlzMrpz(sjdx,myParams,obj);
+            } catch (Exception e) {
+                log.error("获取对象流转默认配置失败"+sjdx, e);
+                return error("获取对象流转默认配置失败："+e.getMessage());
+            }
         default:
             return super.plcl(sjdx, myParams);
         }
+    }
+    /**
+    * 
+    * @see cn.benma666.sjgl.DefaultLjq#jcxx(cn.benma666.domain.SysSjglSjdx, java.lang.String, javax.servlet.http.HttpServletRequest)
+    */
+    @Override
+    public JsonResult jcxx(SysSjglSjdx sjdx, String myparams,
+            HttpServletRequest request) {
+        JsonResult r = super.jcxx(sjdx, myparams, request);
+        if(r.isStatus()){
+            JSONObject myParams = (JSONObject) r.getData();
+            JSONObject yobj = myParams.getJSONObject(KEY_YOBJ);
+            String id_job = yobj.getString("id_job");
+            if(StringUtil.isBlank(id_job)){
+                //新增
+            }else{
+                //修改
+                JSONObject obj = myParams.getJSONObject(KEY_OBJ);
+                try {
+                    String zylx = obj.getString("zylx");
+                    if(StringUtil.isBlank(zylx)||"cgzy".equals(zylx)){
+                        //常规作业
+                        return r;
+                    }
+                    JsonResult r1 = null;
+                    switch (zylx) {
+                    case "javascript":
+                        r1  = KettleService.getJobJavascript(sjdx,myParams,obj);
+                        break;
+                    case "sql":
+                        r1 = KettleService.getJobSql(sjdx,myParams,obj);
+                        break;
+                    case "km":
+                        r1 = KettleService.getJobKm(sjdx,myParams,obj);
+                        break;
+                    case "shell":
+                        r1 = KettleService.getJobShell(sjdx,myParams,obj);
+                        break;
+                    case "dxlz":
+                        r1 = KettleService.getJobDxlz(sjdx,myParams,obj);
+                        break;
+                    default:
+                        r1 = error("不支持的作业类型："+zylx);
+                        break;
+                    }
+                    if(r1.isStatus()){
+                        myParams.put(KEY_OBJ, r1.getData());
+                    }else{
+                        return r1;
+                    }
+                } catch (Exception e) {
+                    log.error("获取作业信息失败："+yobj,e);
+                    r = error("获取作业信息失败："+e.getMessage());
+                }
+            }
+        }
+        return r;
+    }
+    /**
+    * 
+    * @see cn.benma666.sjgl.DefaultLjq#edit(cn.benma666.domain.SysSjglSjdx, com.alibaba.fastjson.JSONObject, org.springframework.ui.Model)
+    */
+    @Override
+    public JsonResult edit(SysSjglSjdx sjdx, JSONObject myParams, Model model) {
+        JsonResult r = super.edit(sjdx, myParams, model);
+        return r;
+    }
+    /**
+    * 
+    * @see cn.benma666.sjgl.DefaultLjq#save(cn.benma666.domain.SysSjglSjdx, com.alibaba.fastjson.JSONObject)
+    */
+    @Override
+    public JsonResult save(SysSjglSjdx sjdx, JSONObject myParams) {
+        String cllx = myParams.getString(KEY_CLLX);
+        JSONObject yobj = myParams.getJSONObject(KEY_YOBJ);
+        JsonResult r = success("编辑成功");
+        try {
+            if(KEY_CLLX_UPDATE.equals(cllx)){
+                //更新时获取数据库中的记录信息
+                JSONObject obj = myParams.getJSONObject(KEY_OBJ);
+                //要用前端修改的数据覆盖部分属性，这里克隆一份,最终形成最新的记录信息
+                obj = (JSONObject) obj.clone();
+                obj.putAll(yobj);
+                yobj = obj;
+            }
+            String zylx = yobj.getString("zylx");
+            if(StringUtil.isNotBlank(zylx)&&!"cgzy".equals(zylx)){
+                //非常规作业
+                switch (zylx) {
+                case "javascript":
+                    r = KettleService.editJobJavascript(sjdx,myParams,yobj);
+                    break;
+                case "sql":
+                    r = KettleService.editJobSql(sjdx,myParams,yobj);
+                    break;
+                case "km":
+                    r = KettleService.editJobKm(sjdx,myParams,yobj);
+                    break;
+                case "shell":
+                    r = KettleService.editJobShell(sjdx,myParams,yobj);
+                    break;
+                case "dxlz":
+                    r = KettleService.editJobDxlz(sjdx,myParams,yobj);
+                    break;
+                default:
+                    r = error("不支持的作业类型："+zylx);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            log.error("编辑作业失败："+yobj,e);
+            r = error("编辑作业失败："+e.getMessage());
+        }
+        if(r.isStatus()&&KEY_CLLX_INSERT.equals(cllx)){
+            //取出作业元数据
+            JobMeta jm = (JobMeta) r.getData();
+            //设置作业主键到yobj
+            String id_job = jm.getObjectId().getId();
+            yobj.put(JobManager.ID_JOB, Integer.parseInt(id_job));
+            //修改处理类型为更新
+            myParams.put(KEY_CLLX,KEY_CLLX_UPDATE);
+        }
+        if(r.isStatus()){
+            //直接数据库更新,更新最后进行，因为kettle修改作业会先删除再添加。
+            myParams.put(KEY_YOBJ, yobj);
+            r = super.save(sjdx, myParams);
+        }
+        return r;
     }
 }

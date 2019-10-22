@@ -99,4 +99,12 @@ public class TransLjq extends DefaultLjq{
             return super.plcl(sjdx, myParams);
         }
     }
+    /**
+    * 
+    * @see cn.benma666.sjgl.DefaultLjq#save(cn.benma666.domain.SysSjglSjdx, com.alibaba.fastjson.JSONObject)
+    */
+    @Override
+    public JsonResult save(SysSjglSjdx sjdx, JSONObject myParams) {
+        return super.save(sjdx, myParams);
+    }
 }
