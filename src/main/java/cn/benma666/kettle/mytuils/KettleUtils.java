@@ -650,6 +650,26 @@ public class KettleUtils {
     }
 
     /**
+    * 删除转换，不级联删除 <br/>
+    * @author jingma
+    * @param id 作业id
+    * @throws KettleException
+    */
+    public static void delTrans(long id) throws KettleException{
+        delTrans(id,repository);
+    }
+    /**
+    * 删除转换，不级联删除 <br/>
+    * @author jingma
+    * @param id 作业id
+    * @param repository 资源库
+    * @throws KettleException
+    */
+    public static void delTrans(long id,Repository repository) throws KettleException{
+        repository.deleteTransformation(new LongObjectId(id));
+    }
+
+    /**
     * 加载转换 <br/>
     * @author jingma
     * @param id 转换id

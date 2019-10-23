@@ -61,7 +61,7 @@ public class JobLjq extends DefaultLjq{
         JSONObject jobJson = null;
         //作业列表
         if(myParams.containsKey(KEY_IDS_ARRAY)){
-            jobs = tdb.find(getDefaultSql(sjdx, "getJobByIds", myParams).getMsg());
+            jobs = tdb.find(getDefaultSql(sjdx, "getObjByIds", myParams).getMsg());
             jobJson = jobs.get(0);
         }
         switch (cllx) {
