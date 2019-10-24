@@ -58,7 +58,6 @@ import com.alibaba.fastjson.JSONObject;
  */
 public class KettleService extends BasicObject{
     //模板信息
-    public static final String templateRoot = "template/";
     public static final String templateHz = "Template.kjb";
 
     /**
@@ -82,7 +81,7 @@ public class KettleService extends BasicObject{
             jm = KettleUtils.loadJob(yobj.getString("id_job"));
         }else{
             //创建作业元对象
-            jm = new JobMeta(templateRoot+yobj.getString("zylx")+templateHz, KettleUtils.getInstanceRep());
+            jm = new JobMeta(SConf.getVal("kettle.template.dir")+yobj.getString("zylx")+templateHz, KettleUtils.getInstanceRep());
             jm.setName(yobj.getString("name"));
             //设置目录
             String directory = yobj.getString("id_directory");

@@ -423,10 +423,6 @@ public class KettleUtils {
     public static void initEnv() throws KettleException {
         //初始化kettle环境
         if(!KettleEnvironment.isInitialized()){
-            log.debug("KETTLE_HOME配置[能自动加载该目录下plugins中的插件]："+System.getProperty("KETTLE_HOME"));
-            log.debug("Simple-jndi配置根路径："+System.getProperty("org.osjava.sj.root"));
-            log.debug("日志最大行数："+System.getProperty("KETTLE_MAX_LOG_SIZE_IN_LINES"));
-            log.debug("最大日志管道数："+System.getProperty("KETTLE_MAX_LOGGING_REGISTRY_SIZE"));
             KettleEnvironment.init();
             KettleClientEnvironment.getInstance().setClient( KettleClientEnvironment.ClientType.SPOON );
         }
