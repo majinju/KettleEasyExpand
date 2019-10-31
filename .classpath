@@ -29,9 +29,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/kettle5.4"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Kettle Core"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Kettle Engine"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Kettle UI"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/kettle5.4-myservice"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

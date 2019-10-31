@@ -38,7 +38,6 @@ import cn.benma666.iframe.BasicObject;
 import cn.benma666.iframe.DictManager;
 import cn.benma666.kettle.jobentry.easyexpand.JobEntryEasyExpand;
 import cn.benma666.kettle.mytuils.KettleUtils;
-import cn.benma666.myutils.DesUtil;
 import cn.benma666.myutils.JsonResult;
 import cn.benma666.myutils.StringUtil;
 import cn.benma666.sjgl.DefaultLjq;
@@ -196,10 +195,7 @@ public class KettleService extends BasicObject{
         }
         JobMeta jm = (JobMeta) r.getData();
         String dbCode = yobj.getString("sjzt");
-        JSONObject dbObj = DictManager.zdObjByDmByCache(LjqInterface.ZD_SYS_COMMON_SJZT, dbCode);
-        DatabaseMeta dm = KettleUtils.createDatabaseMeta(dbObj.getString("dm"),dbObj.getString("ljc"),
-                dbObj.getString("yhm"),DesUtil.decrypt(dbObj.getString("mm"), SConf.getVal("sjzt.mm.ejmm")),
-                false,KettleUtils.getInstanceRep());
+        DatabaseMeta dm = KettleUtils.createDatabaseMetaByJndi(dbCode);
         JobEntrySQL sql = (JobEntrySQL) jm.findJobEntry(yobj.getString("zylx")).getEntry();
         sql.setSQL(yobj.getString("sql"));
         sql.setDatabase(dm);
@@ -281,11 +277,15 @@ public class KettleService extends BasicObject{
         JSONObject mbdxParams = (JSONObject) DefaultLjq.getJcxxById(obj.getString("mbdx")).getData();
         SysSjglSjdx lydx = (SysSjglSjdx) lydxParams.get(LjqInterface.KEY_SJDX);
         SysSjglSjdx mbdx = (SysSjglSjdx) mbdxParams.get(LjqInterface.KEY_SJDX);
+        String srzj = getSrzj(obj,lydx).getMsg();
+        String sczj = getSczj(obj,mbdx).getMsg();
         String lzmb = getLzmb(obj,lydx,mbdx).getMsg();
         //更多配置出来
         JSONObject gdpz = JSONObject.parseObject(obj.getString("extended_description"));
         gdpz.put("lydx", obj.getString("lydx"));
         gdpz.put("mbdx", obj.getString("mbdx"));
+        gdpz.put("srzj", srzj);
+        gdpz.put("sczj", sczj);
         gdpz.put("lzmb", lzmb);
         lydxParams.put("gdpz", gdpz);
         //加载模板
@@ -375,10 +375,7 @@ public class KettleService extends BasicObject{
         TableInputMeta ti = (TableInputMeta) srStep.getStepMetaInterface();
         //输入的数据库
         String lyDbDm = lydx.getDxzt();
-        JSONObject lyDbObj = DictManager.zdObjByDmByCache(LjqInterface.ZD_SYS_COMMON_SJZT, lyDbDm);
-        DatabaseMeta lyDm = KettleUtils.createDatabaseMeta(lyDbObj.getString("dm"),lyDbObj.getString("ljc"),
-                lyDbObj.getString("yhm"),DesUtil.decrypt(lyDbObj.getString("mm"), SConf.getVal("sjzt.mm.ejmm")),
-                false,KettleUtils.getInstanceRep());
+        DatabaseMeta lyDm = KettleUtils.createDatabaseMetaByJndi(lyDbDm);
         ti.setDatabaseMeta(lyDm);
         params.put("SOURCE_SQL", DefaultLjq.getDefaultSql(lydx, "cqsql", lydxParams).getMsg());
     }
@@ -394,19 +391,17 @@ public class KettleService extends BasicObject{
             KettleException {
         params.put("TG_SCHEMA", mbdx.getDxgs());
         params.put("TG_TABLE", mbdx.getJtdx());
+        JSONObject scpz = gdpz.getJSONObject("输出配置");
         //输出的数据库
-        String pltjl = gdpz.getString("输出批量提交量");
+        String pltjl = scpz.getString("输出批量提交量");
         String mbDbDm = mbdx.getDxzt();
-        JSONObject mbDbObj = DictManager.zdObjByDmByCache(LjqInterface.ZD_SYS_COMMON_SJZT, mbDbDm);
-        DatabaseMeta mbDm = KettleUtils.createDatabaseMeta(mbDbObj.getString("dm"),mbDbObj.getString("ljc"),
-                mbDbObj.getString("yhm"),DesUtil.decrypt(mbDbObj.getString("mm"), SConf.getVal("sjzt.mm.ejmm")),
-                false,KettleUtils.getInstanceRep());
+        DatabaseMeta mbDm = KettleUtils.createDatabaseMetaByJndi(mbDbDm);
         lzmb = getScms(lzmb);
         switch (lzmb) {
         case "插入更新":
             InsertUpdateMeta iu = (InsertUpdateMeta) scStep.getStepMetaInterface();
             iu.setCommitSize(pltjl);
-            iu.setUpdateBypassed(gdpz.getBoolean("输出不执行更新"));
+            iu.setUpdateBypassed(scpz.getBoolean("输出不执行更新"));
             iu.setDatabaseMeta(mbDm);
             //设置字段映射
             iu.setUpdateLookup(updateLookup.toArray(new String[]{}));
@@ -434,7 +429,7 @@ public class KettleService extends BasicObject{
             TableOutputMeta to = (TableOutputMeta) scStep.getStepMetaInterface();
             to.setCommitSize(pltjl);
             to.setDatabaseMeta(mbDm);
-            to.setTruncateTable(gdpz.getBooleanValue("裁剪表"));
+            to.setTruncateTable(scpz.getBooleanValue("裁剪表"));
             //设置字段映射
             to.setFieldDatabase(updateLookup.toArray(new String[]{}));
             to.setFieldStream(updateStream.toArray(new String[]{}));
@@ -460,6 +455,49 @@ public class KettleService extends BasicObject{
     }
 
     /**
+    * 获取输入组件 <br/>
+    */
+    private static JsonResult getSrzj(JSONObject obj, SysSjglSjdx lydx) {
+        String srzj = obj.getString("srzj");
+        if(StringUtil.isNotBlank(srzj)){
+            return success(srzj);
+        }
+        switch (lydx.getDxztlx()) {
+        case JdbcUtils.ORACLE:
+        case JdbcUtils.MYSQL:
+            //后面可将此处改为字典
+            srzj = "bsr";
+            break;
+        case "ftp":
+        case "bdwj":
+        default:
+            throw new MyException("暂不支持该数据载体类型作为来源："+lydx.getDxztlx());
+        }
+        return success(srzj);
+    }
+
+    /**
+    * 获取输出组件 <br/>
+    */
+    private static JsonResult getSczj(JSONObject obj,SysSjglSjdx mbdx) {
+        String sczj = obj.getString("sczj");
+        if(StringUtil.isNotBlank(sczj)){
+            return success(sczj);
+        }
+        switch (mbdx.getDxztlx()) {
+        case JdbcUtils.ORACLE:
+        case JdbcUtils.MYSQL:
+            sczj += "crgx";
+            break;
+        case "ftp":
+        case "bdwj":
+        default:
+            throw new MyException("暂不支持该数据载体类型作为目标："+mbdx.getDxztlx());
+        }
+        return success(sczj);
+    }
+
+    /**
     * 获取流转模板 <br/>
     */
     private static JsonResult getLzmb(JSONObject obj, SysSjglSjdx lydx,
@@ -468,27 +506,9 @@ public class KettleService extends BasicObject{
         if(StringUtil.isNotBlank(lzmb)){
             return success(lzmb);
         }
-        switch (lydx.getDxztlx()) {
-        case JdbcUtils.ORACLE:
-        case JdbcUtils.MYSQL:
-            //后面可将此处改为字典
-            lzmb = "bsr-";
-            break;
-        case "ftp":
-        case "bdwj":
-        default:
-            throw new MyException("暂不支持该数据载体类型作为来源："+lydx.getDxztlx());
-        }
-        switch (mbdx.getDxztlx()) {
-        case JdbcUtils.ORACLE:
-        case JdbcUtils.MYSQL:
-            lzmb += "crgx";
-            break;
-        case "ftp":
-        case "bdwj":
-        default:
-            throw new MyException("暂不支持该数据载体类型作为目标："+lydx.getDxztlx());
-        }
+        String srzj = getSrzj(obj,lydx).getMsg();
+        String sczj = getSczj(obj,mbdx).getMsg();
+        lzmb = srzj+"-"+sczj;
         return success(lzmb);
     }
 
@@ -513,10 +533,12 @@ public class KettleService extends BasicObject{
         //处理字段映射
         getMrzdys(lydxParams, mbdxParams, gdpz);
         //来源对象处理
+        JSONObject srpz = new JSONObject();
+        gdpz.put("输入配置", srpz);
         switch (lydx.getDxztlx()) {
         case JdbcUtils.ORACLE:
         case JdbcUtils.MYSQL:
-            gdpz.put("来源抽取模式", "增量");
+            srpz.put("来源抽取模式", "增量");
             break;
         case "ftp":
         case "bdwj":
@@ -524,17 +546,19 @@ public class KettleService extends BasicObject{
             return error("暂不支持该数据载体类型作为来源："+lydx.getDxztlx());
         }
         //目标对象处理
+        JSONObject scpz = new JSONObject();
+        gdpz.put("输出配置", scpz);
         switch (mbdx.getDxztlx()) {
         case JdbcUtils.ORACLE:
         case JdbcUtils.MYSQL:
-            gdpz.put("输出批量提交量", 1000);
+            scpz.put("输出批量提交量", 1000);
             lzmb = getScms(lzmb);
             switch (lzmb) {
             case "插入更新":
-                gdpz.put("输出不执行更新", false);
+                scpz.put("输出不执行更新", false);
                 break;
             case "表输出":
-                gdpz.put("裁剪表", false);
+                scpz.put("裁剪表", false);
                 break;
             default:
                 throw new MyException("不支持的输出模式："+lzmb);
@@ -620,16 +644,29 @@ public class KettleService extends BasicObject{
         JSONObject gdpz = JSONObject.parseObject(jm.getExtendedDescription());
         obj.put("lydx", gdpz.remove("lydx"));
         obj.put("mbdx", gdpz.remove("mbdx"));
+        obj.put("srzj", gdpz.remove("srzj"));
+        obj.put("sczj", gdpz.remove("sczj"));
         obj.put("lzmb", gdpz.remove("lzmb"));
         obj.put("extended_description", gdpz.toJSONString());
         return success("获取成功",obj);
     }
 
     /**
-    *  <br/>
+    * 导入作业 <br/>
     * @author jingma
     */
-    public static void impJob() {
+    public static JsonResult impJob(SysSjglSjdx sjdx, JSONObject myParams, 
+            JSONObject obj) {
+        return error("暂不支持");
+    }
+
+    /**
+    * 导入转换 <br/>
+    * @author jingma
+    */
+    public static JsonResult impTrans(SysSjglSjdx sjdx, JSONObject myParams, 
+            JSONObject obj) {
+        return error("暂不支持");
     }
 
 }

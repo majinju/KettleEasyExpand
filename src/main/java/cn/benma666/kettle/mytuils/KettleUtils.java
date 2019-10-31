@@ -54,12 +54,8 @@ import org.slf4j.LoggerFactory;
 import cn.benma666.constants.UtilConst;
 import cn.benma666.domain.SysSjglSjdx;
 import cn.benma666.iframe.CacheFactory;
-import cn.benma666.iframe.DictManager;
-import cn.benma666.myutils.DesUtil;
 import cn.benma666.myutils.JdbcUtil;
 import cn.benma666.myutils.StringUtil;
-import cn.benma666.sjgl.LjqInterface;
-import cn.benma666.web.SConf;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -373,10 +369,8 @@ public class KettleUtils {
             try {
                 //数据对象的kettle配置
                 JSONObject kzxx = JSON.parseObject(sjdx.getKzxx()).getJSONObject("kettleConfig");
-                JSONObject sjzt = DictManager.zdObjByDmByCache(LjqInterface.ZD_SYS_COMMON_SJZT, sjdx.getDxzt());
-                connectKettle(sjdx.getDxdm(), sjzt.getString("ljc"), sjzt.getString("yhm"), 
-                        DesUtil.decrypt(sjzt.getString("mm"), SConf.getVal("sjzt.mm.ejmm")),
-                        kzxx.getString("kuser"), kzxx.getString("kpass"));
+                Db db = Db.use(sjdx.getDxzt());
+                connectKettle(sjdx.getDxzt(),db.getDbType(),kzxx.getString("kuser"), kzxx.getString("kpass"));
                 rep = use(sjdx.getDxdm());
             } catch (Exception e) {
                 log.error("初始化资源库失败："+sjdx, e);
@@ -441,6 +435,13 @@ public class KettleUtils {
             return "mysql";
         }
         return null;
+    }
+    public static DatabaseMeta createDatabaseMetaByJndi(String jndiName){
+        Db db = Db.use(jndiName);
+        return createDatabaseMeta(jndiName, db.getDbType(), 
+                DatabaseMeta.dbAccessTypeCode[DatabaseMeta.TYPE_ACCESS_JNDI], 
+                null, jndiName, null, null,null, null, true, repository, 
+                Db.getDbCsyj(db.getDbType(), "select 1 from dual"));
     }
     /**
     * 创建数据连接元数据对象 <br/>

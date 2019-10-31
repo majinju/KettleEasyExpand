@@ -15,9 +15,5 @@ package cn.benma666.kettle.common;
  * @version 
  */
 public class KuConst implements KuConstInterface{
-    /**
-    * kettle资源库数据源
-    */
-    public static String DS_KETTLE = "kettle";
     
 }

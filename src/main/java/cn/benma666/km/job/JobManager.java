@@ -35,7 +35,6 @@ import org.quartz.PersistJobDataAfterExecution;
 
 import cn.benma666.constants.UtilConst;
 import cn.benma666.domain.SysSjglSjdx;
-import cn.benma666.iframe.BasicObject;
 import cn.benma666.iframe.DictManager;
 import cn.benma666.kettle.loglistener.FileLoggingEventListener;
 import cn.benma666.kettle.mytuils.Db;
@@ -125,19 +124,8 @@ public class JobManager extends AbsJob {
     public static void keeInit() {
         Class<?> clazz = SConf.class;//String类
         System.out.println(clazz.getResource(clazz.getSimpleName() + ".class"));
-        if(!SConf.isInited()){
-            //没初始化则进行初始化操作，此处进行非web场景的初始化
-            //此处需要在kettle的jndi中配置default数据源
-            sjsjdb = Db.use(UtilConst.DEFAULT);
-            BasicObject.initObj();
-            SConf sc = new SConf();
-            //设置加载配置的字典类别
-            List<String> configCodeList = new ArrayList<String>();
-            configCodeList.add("SYS_COMMON_APPCONFIG");
-            configCodeList.add("SYS_KP_APPCONFIG");
-            sc.setConfigCodeList(configCodeList);
-            sc.processProperties(null);
-        }
+        //此处需要在kettle的jndi中配置default数据源
+        sjsjdb = Db.use(UtilConst.DEFAULT);
     }
 
     /**
@@ -303,7 +291,7 @@ public class JobManager extends AbsJob {
                     param.getString("value"));
         }
         jm.setLogLevel(LogLevel.getLogLevelForCode(DictManager.zdMcByDm("KETTLE_LOG_LEVEL", jobJson.getString("log_level"))));
-        Job job = new Job(KettleUtils.use(sjdx), jm);
+        Job job = new Job(KettleUtils.getInstanceRep(), jm);
         job.setLogLevel(jm.getLogLevel());
         jsonjobMap.put(job, jobJson);
 
