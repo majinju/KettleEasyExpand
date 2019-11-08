@@ -32,6 +32,7 @@ import org.pentaho.di.repository.BaseRepositoryMeta;
 import org.pentaho.di.repository.LongObjectId;
 import org.pentaho.di.repository.ObjectId;
 import org.pentaho.di.repository.Repository;
+import org.pentaho.di.repository.RepositoryDirectory;
 import org.pentaho.di.repository.RepositoryDirectoryInterface;
 import org.pentaho.di.repository.RepositoryElementInterface;
 import org.pentaho.di.repository.StringObjectId;
@@ -53,6 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import cn.benma666.constants.UtilConst;
 import cn.benma666.domain.SysSjglSjdx;
+import cn.benma666.exception.MyException;
 import cn.benma666.iframe.CacheFactory;
 import cn.benma666.myutils.JdbcUtil;
 import cn.benma666.myutils.StringUtil;
@@ -864,21 +866,21 @@ public class KettleUtils {
     public static RepositoryDirectoryInterface getOrMakeDirectory(String parentDirectory,String directoryName) throws KettleException {
         RepositoryDirectoryInterface parent = repository.findDirectory(parentDirectory);
         if(StringUtil.isBlank(parentDirectory)){
-            parent = repository.findDirectory("/");
+            parent = new RepositoryDirectory(null, "/");
+            parent.setObjectId(new LongObjectId(0));
         }
         if(StringUtil.isNotBlank(directoryName)){
             RepositoryDirectoryInterface dir = repository.findDirectory(parentDirectory+"/"+directoryName);
             if(dir==null){
-                return repository.createRepositoryDirectory(parent, directoryName);
-            }else{
-                return dir;
+                dir = repository.createRepositoryDirectory(parent, directoryName);
             }
+            return dir;
         }else{
             return parent;
         }
     }
     /**
-    *  <br/>
+    * 创建多级目录 <br/>
     * @author jingma
     * @param directoryName
     * @return
@@ -900,7 +902,7 @@ public class KettleUtils {
             }
             return getOrMakeDirectory(parentDirectory,null);
         }else{
-            return null;
+            throw new MyException("创建的目录为空");
         }
     }
 	

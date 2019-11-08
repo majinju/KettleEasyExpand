@@ -295,20 +295,25 @@ public class KettleService extends BasicObject{
         Map<String, String> params = new HashMap<String, String>();
         //流转模板由代码转为路径
         lzmb = "/template/"+DictManager.zdMcByDm("KETTLE_DXLZ_LZMB", lzmb);
+        //获取目录
         String directory = obj.getString("id_directory")+"/"+obj.getString("name");
+        RepositoryDirectoryInterface dir = KettleUtils.makeDirs(directory);
         if(StringUtil.isNotBlank(obj.getString("id_job"))){
             jm = KettleUtils.loadJob(obj.getString("id_job"));
             directory = obj.getString("id_directory");
             zlzh = KettleUtils.loadTrans("处理转换",directory);
+            //设置为以前的id
+            zlzh.setObjectId(KettleUtils.getTransformationID(zlzh));
         }else{
             //创建作业元对象
             jm = KettleUtils.loadJobTP("模板作业",lzmb);
-            zlzh = KettleUtils.loadTransTP("处理转换", lzmb);
+            jm.setRepositoryDirectory(dir);
             jm.setName(obj.getString("name"));
             jm.setCreatedUser(user.getYhxm());
             jm.setCreatedDate(new Date());
             jm.setJobstatus(2);
-            
+            zlzh = KettleUtils.loadTransTP("处理转换", lzmb);
+            zlzh.setRepositoryDirectory(dir);
         }
         //加载步骤
         StepMeta scStep = zlzh.findStep("输出");
@@ -346,18 +351,13 @@ public class KettleService extends BasicObject{
         default:
             throw new MyException("暂不支持该数据载体类型作为目标："+lydx.getDxztlx());
         }
-        //获取目录
-        RepositoryDirectoryInterface dir = KettleUtils.makeDirs(directory);
         //设置作业
-        jm.setRepositoryDirectory(dir);
         jm.setDescription(obj.getString("description"));
         jm.setExtendedDescription(JSON.toJSONString(gdpz, true));
         jm.setModifiedUser(user.getYhxm());
         jm.setModifiedDate(new Date());
         obj.put("extended_description", jm.getExtendedDescription());
         //设置转换
-        zlzh.setRepositoryDirectory(dir);
-        zlzh.setObjectId(KettleUtils.getTransformationID(zlzh));
         KettleUtils.setParams(jm, (NamedParams) jm.realClone(false), params );
         //保存
         KettleUtils.saveTrans(zlzh);

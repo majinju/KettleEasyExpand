@@ -23,6 +23,7 @@ import org.pentaho.di.core.database.util.DatabaseUtil;
 import cn.benma666.constants.UtilConst;
 import cn.benma666.exception.MyException;
 import cn.benma666.iframe.CacheFactory;
+import cn.benma666.myutils.Log;
 import cn.benma666.web.SConf;
 
 import com.alibaba.druid.pool.DruidDataSource;
@@ -62,6 +63,7 @@ public class Db extends cn.benma666.db.Db{
                 dataSource = DatabaseUtil.getDataSourceFromJndi( dbCode, new InitialContext() );
             } catch (Exception e) {
                 //只需在jndi中配置sjsj数据库即可，其他数据源使用myservice中配置的数据源
+                Log.getLogger().debug("获取JNDI数据源失败", e);
                 throw new MyException("获取数据源失败",e);
             }
         }else{
