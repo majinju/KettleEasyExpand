@@ -1187,7 +1187,18 @@ public class KettleUtils {
                         source.getParameterDescription( key ) );
             }
         } catch (Exception e) {
-            log.error("保存JOB失败", e);
+            log.error("保存参数失败", e);
+        }
+    }
+    public static void setParams(NamedParams target,JSONObject params) {
+        try {
+            for ( String key : params.keySet()) {
+                JSONObject p = params.getJSONObject(key);
+                target.addParameterDefinition( key, p.getString("默认值"), 
+                        p.getString("参数名称"));
+            }
+        } catch (Exception e) {
+            log.error("保存参数失败", e);
         }
     }
 

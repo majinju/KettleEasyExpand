@@ -55,19 +55,25 @@ public class Db extends cn.benma666.db.Db{
             //先尝试连接默认数据源，便于后续获取字典等信息
             use(UtilConst.DEFAULT);
         }
+        Db ndb = null;
         //先获取自有数据源，找不到在尝试simplejndi
         cn.benma666.db.Db tdb = cn.benma666.db.Db.use(dbCode);
         DataSource dataSource = null;
         if(tdb==null){
             try {
                 dataSource = DatabaseUtil.getDataSourceFromJndi( dbCode, new InitialContext() );
+                ndb = new Db(dbCode,dataSource);
             } catch (Exception e) {
                 //只需在jndi中配置sjsj数据库即可，其他数据源使用myservice中配置的数据源
                 Log.getLogger().debug("获取JNDI数据源失败", e);
                 throw new MyException("获取数据源失败",e);
             }
         }else{
-            dataSource = tdb.getDs();
+            ndb = new Db();
+            ndb.setDs(tdb.getDs());
+            ndb.setSqlManager(tdb.getSqlManager());
+            ndb.setDbType(tdb.getDbType());
+            ndb.setName(dbCode);
         }
         if(!SConf.isInited()){
             //没初始化则进行初始化操作，此处进行非web场景的初始化
@@ -96,7 +102,12 @@ public class Db extends cn.benma666.db.Db{
             }
             sc.processProperties(properties);
         }
-        return new Db(dbCode,dataSource);
+        return ndb;
+    }
+    /**
+     * Creates a new instance of Db.
+     */
+    public Db() {
     }
     public Db(String dbCode,DataSource dataSource) {
         super(dbCode, (DruidDataSource) dataSource);

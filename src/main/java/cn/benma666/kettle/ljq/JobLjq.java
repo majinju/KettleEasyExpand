@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.pentaho.di.job.JobMeta;
 import org.springframework.ui.Model;
 
+import cn.benma666.constants.UtilConst;
 import cn.benma666.db.Db;
 import cn.benma666.domain.SysSjglFile;
 import cn.benma666.domain.SysSjglSjdx;
@@ -64,6 +65,7 @@ public class JobLjq extends DefaultLjq{
             jobs = tdb.find(getDefaultSql(sjdx, "getObjByIds", myParams).getMsg());
             jobJson = jobs.get(0);
         }
+        KettleService ks = new KettleService(sjdx,myParams);
         switch (cllx) {
         case KEY_CLLX_PLSC:
             //批量删除作业
@@ -133,6 +135,42 @@ public class JobLjq extends DefaultLjq{
             }else{
                 return error("结束成功作业数："+(jobs.size()-flag)+"，失败作业数："+flag+"，请查看系统日志分析原因！");
             }
+        case "cxsc":
+            //重新生成
+            myParams.put(KEY_CLLX, KEY_CLLX_UPDATE);
+            int qtzy = 0;
+            //需要调用每个作业的基础信息
+            for(JSONObject job : jobs){
+                try {
+                    if("dxlz".equals(job.getString("zylx"))){
+                        job.put("cxsc", UtilConst.WHETHER_TRUE);
+                        ks.setObj(job);
+                        ks.getJobDxlz();
+                        myParams.put(KEY_OBJ, job);
+                        myParams.put(KEY_YOBJ, job);
+                        save(sjdx, myParams);
+                    }else{
+                        qtzy++;
+                    }
+                } catch (Exception e) {
+                    flag++;
+                    log.error("重新生成失败:"+job, e);
+                }
+            }
+            if(flag+qtzy==0){
+                return success("重新生成成功："+jobs.size());
+            }else{
+                JsonResult r = error("已重新生成作业数："+(jobs.size()-flag-qtzy));
+                if(flag>0){
+                    r.addMsg("失败作业数："+flag+"，请查看系统日志分析原因！");
+                }else{
+                    r.setStatus(true);
+                }
+                if(qtzy>0){
+                    r.addMsg("重新生成功能只针对对象流转类型的作业,其他作业已自动忽略，其他作业数："+qtzy);
+                }
+                return r;
+            }
         case "cz":
             //重置作业，丢弃原有运行信息，用于卡死结束不掉的场景
             try {
@@ -194,7 +232,8 @@ public class JobLjq extends DefaultLjq{
                 JSONObject yobj = myParams.getJSONObject(KEY_YOBJ);
                 JSONObject obj = myParams.getJSONObject(KEY_OBJ);
                 obj.putAll(yobj);
-                return KettleService.getDxlzMrpz(sjdx,myParams,obj);
+                ks.setObj(obj);
+                return ks.getDxlzMrpz();
             } catch (Exception e) {
                 log.error("获取对象流转默认配置失败"+sjdx, e);
                 return error("获取对象流转默认配置失败："+e.getMessage());
@@ -227,21 +266,23 @@ public class JobLjq extends DefaultLjq{
                         return r;
                     }
                     JsonResult r1 = null;
+                    KettleService ks = new KettleService(sjdx,myParams);
+                    ks.setObj(obj);
                     switch (zylx) {
                     case "javascript":
-                        r1  = KettleService.getJobJavascript(sjdx,myParams,obj);
+                        r1  = ks.getJobJavascript();
                         break;
                     case "sql":
-                        r1 = KettleService.getJobSql(sjdx,myParams,obj);
+                        r1 = ks.getJobSql();
                         break;
                     case "km":
-                        r1 = KettleService.getJobKm(sjdx,myParams,obj);
+                        r1 = ks.getJobKm();
                         break;
                     case "shell":
-                        r1 = KettleService.getJobShell(sjdx,myParams,obj);
+                        r1 = ks.getJobShell();
                         break;
                     case "dxlz":
-                        r1 = KettleService.getJobDxlz(sjdx,myParams,obj);
+                        r1 = ks.getJobDxlz();
                         break;
                     default:
                         r1 = error("不支持的作业类型："+zylx);
@@ -290,21 +331,23 @@ public class JobLjq extends DefaultLjq{
             String zylx = yobj.getString("zylx");
             if(StringUtil.isNotBlank(zylx)&&!"cgzy".equals(zylx)){
                 //非常规作业
+                KettleService ks = new KettleService(sjdx,myParams);
+                ks.setObj(yobj);
                 switch (zylx) {
                 case "javascript":
-                    r = KettleService.editJobJavascript(sjdx,myParams,yobj);
+                    r = ks.editJobJavascript();
                     break;
                 case "sql":
-                    r = KettleService.editJobSql(sjdx,myParams,yobj);
+                    r = ks.editJobSql();
                     break;
                 case "km":
-                    r = KettleService.editJobKm(sjdx,myParams,yobj);
+                    r = ks.editJobKm();
                     break;
                 case "shell":
-                    r = KettleService.editJobShell(sjdx,myParams,yobj);
+                    r = ks.editJobShell();
                     break;
                 case "dxlz":
-                    r = KettleService.editJobDxlz(sjdx,myParams,yobj);
+                    r = ks.editJobDxlz();
                     break;
                 default:
                     r = error("不支持的作业类型："+zylx);
