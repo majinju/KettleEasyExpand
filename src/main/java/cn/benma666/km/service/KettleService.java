@@ -27,6 +27,7 @@ import org.pentaho.di.job.entries.job.JobEntryJob;
 import org.pentaho.di.job.entries.shell.JobEntryShell;
 import org.pentaho.di.job.entries.sql.JobEntrySQL;
 import org.pentaho.di.repository.RepositoryDirectoryInterface;
+import org.pentaho.di.repository.StringObjectId;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
@@ -79,6 +80,10 @@ public class KettleService extends BasicObject{
     * 公共作业-处理后工作
     */
     private static final String GGZY_CLHGZ = "GGZY_CLHGZ";
+    /**
+    * 公共作业-处理失败工作
+    */
+    private static final String GGZY_CLSBGZ = "GGZY_CLSBGZ";
     private static final String FIELD_ZDYS_SFGX = "是否更新";
     private static final String FIELD_ZDYS_MBZD = "目标字段";
     private static final String FIELD_ZDYS_LYZD = "来源字段";
@@ -328,16 +333,21 @@ public class KettleService extends BasicObject{
         //加载模板
         JobMeta jm = null;
         TransMeta clzh = null;
+        String directory = null;
         JSONObject lzmbObj = DictManager.zdObjByDmByCache("KETTLE_DXLZ_LZMB", lzmb);
         //获取目录
         if(StringUtil.isNotBlank(obj.getString("id_job"))){
-            jm = KettleUtils.loadJob(obj.getString("id_job"));
-            String directory = obj.getString("id_directory");
-            clzh = KettleUtils.loadTrans("处理转换",directory);
-            //设置为以前的id
-            clzh.setObjectId(KettleUtils.getTransformationID(clzh));
+            directory = obj.getString("id_directory");
+            if(!obj.getBooleanValue("cxsc")){
+                jm = KettleUtils.loadJob(obj.getString("id_job"));
+                clzh = KettleUtils.loadTrans("处理转换",directory);
+                //设置为以前的id
+                clzh.setObjectId(KettleUtils.getTransformationID(clzh));
+            }
         }else{
-            String directory = obj.getString("id_directory")+"/"+obj.getString("name");
+            directory = obj.getString("id_directory")+"/"+obj.getString("name");
+        }
+        if(jm==null){
             RepositoryDirectoryInterface dir = KettleUtils.makeDirs(directory);
             //创建作业元对象
             jm = KettleUtils.loadJobTP("模板作业","/template/对象流转");
@@ -350,9 +360,16 @@ public class KettleService extends BasicObject{
             clzh = KettleUtils.loadTransTP("处理转换-"+lzmbObj.getString("mc"), 
                     "/template/对象流转");
             //设置
-            clzh.setObjectId(null);
             clzh.setRepositoryDirectory(dir);
             clzh.setName("处理转换");
+            if(StringUtil.isNotBlank(obj.getString("id_job"))){
+                //设置为以前的id
+                jm.setObjectId(new StringObjectId(obj.getString("id_job")));
+                clzh.setObjectId(KettleUtils.getTransformationID("处理转换",dir));
+            }else{
+                jm.setObjectId(null);
+                clzh.setObjectId(null);
+            }
         }
         //作业参数处理
         for ( String key : jm.listParameters() ) {
@@ -361,6 +378,7 @@ public class KettleService extends BasicObject{
         //编辑时先清空，后续会根据需要依次添加
         setParam(GGZY_CLQGZ,"");
         setParam(GGZY_CLHGZ,"");
+        setParam(GGZY_CLSBGZ,"");
         jm.eraseParameters();
         JSONArray paramArray = JSON.parseObject(lzmbObj.getString("kzxx")).getJSONArray("组件参数");
         for(JSONObject p:paramArray.toArray(new JSONObject[]{})){
@@ -444,7 +462,7 @@ public class KettleService extends BasicObject{
             //添加工作：创建上传临时目录
             addParamVal(GGZY_CLQGZ,"cjsclsml");
             addParamVal(GGZY_CLHGZ,"ftp");
-            setParam("TG_FILENAME", "${FTP_LSGML}${JOB_NAME}/"+mbdx.getDxgs()+"/"+obj.getString("name"));
+            setParam("TG_FILENAME", "${FTP_LSGML}${JOB_NAME}/${SC_FTP_YCML}"+"/"+obj.getString("name"));
             bzscBdwjsc();
             break;
         case "bdwj":
@@ -486,6 +504,7 @@ public class KettleService extends BasicObject{
     */
     private void bzscBdwjsr() {
         addParamVal(GGZY_CLHGZ,"bdwj");
+        addParamVal(GGZY_CLSBGZ,"bdwj");
         setParam("SOURCE_TPF", lydx.getJtdx());
         JSONArray zdys = gdpz.getJSONArray("字段映射");
         switch (srzj) {
@@ -551,7 +570,11 @@ public class KettleService extends BasicObject{
                 TextFileField field = new TextFileField();
                 field.setName(fo.getString(FIELD_ZDYS_LYZD).toUpperCase());
                 field.setType(ValueMeta.getType(fo.getString(FIELD_ZDYS_ZDLX)));
-                field.setLength(fo.getIntValue(FIELD_ZDYS_ZDCD));
+                field.setLength(-1);
+                field.setPrecision(-1);
+                if("Number".equals(fo.getString(FIELD_ZDYS_ZDLX))){
+                    field.setFormat("0.#####");
+                }
                 field.setTrimType(ValueMeta.getTrimTypeByDesc("去掉左右两端空格"));
                 tfl.add(field);
             }
@@ -582,7 +605,7 @@ public class KettleService extends BasicObject{
         //输入的数据库
         DatabaseMeta lydb = KettleUtils.createDatabaseMetaByJndi(srpz.getString("数据载体"));
         ti.setDatabaseMeta(lydb);
-        params.getJSONObject("SOURCE_SQL").put("默认值", DefaultLjq.getDefaultSql(lydx, "cqsql", lydxParams).getMsg());
+        setParam("SOURCE_SQL", DefaultLjq.getDefaultSql(lydx, "cqsql", lydxParams).getMsg());
         if("zlmb".equals(gdpz.getString("lzmb"))){
             //增量模板时，处理前工作添加zl
             addParamVal(GGZY_CLQGZ,"zl");
@@ -858,6 +881,14 @@ public class KettleService extends BasicObject{
                     tj.put(FIELD_GXTJ_YSF, "=");
                     gxtj.add(tj);
                 }
+            }
+            if(gxtj.size()==0){
+                //当没有单独配置去重字段时，采用主键去重
+                JSONObject tj = new JSONObject();
+                tj.put(FIELD_ZDYS_LYZD, lydx.getZjzd());
+                tj.put(FIELD_ZDYS_MBZD, mbdx.getZjzd());
+                tj.put(FIELD_GXTJ_YSF, "=");
+                gxtj.add(tj);
             }
             
         }
