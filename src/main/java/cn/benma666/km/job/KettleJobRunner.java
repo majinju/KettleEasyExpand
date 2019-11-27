@@ -48,10 +48,10 @@ public class KettleJobRunner extends AbsJob {
                 try {
                     //此处存在一个作业被多处调用的可能，下一层控制了同一个作业同时只能运行一个，可能造成混乱
                     //所以建议一个作业不要多次使用，只能暂时只能靠自觉，瞎搞自己该遭
-                    info("开始执行作业："+jobJson);
+                    info("开始执行作业："+jobJson.getString("job_name"));
                     JobManager.startJob(jobJson);
                     JobManager.getJob(jobId).join();
-                    info("结束执行作业："+jobId);
+                    info("结束执行作业："+jobJson.getString("job_name"));
                 } catch (Exception e) {
                     error("作业启动失败："+jobJson, e);
                     break;

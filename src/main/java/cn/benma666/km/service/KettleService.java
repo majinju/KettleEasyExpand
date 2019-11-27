@@ -467,7 +467,11 @@ public class KettleService extends BasicObject{
             break;
         case "bdwj":
             //作业名称作为生成文件的前缀
-            setParam("TG_FILENAME", scSjzt.getString("ljc")+mbdx.getDxgs()+"/"+obj.getString("name"));
+            String tgFilename = scSjzt.getString("ljc");
+            if(StringUtil.isNotBlank(mbdx.getDxgs())){
+                tgFilename += (mbdx.getDxgs()+"/");
+            }
+            setParam("TG_FILENAME", tgFilename+obj.getString("name"));
             bzscBdwjsc();
             break;
         default:
@@ -476,7 +480,7 @@ public class KettleService extends BasicObject{
         //设置作业
         jm.setDescription(obj.getString("description"));
 //        jm.setExtendedDescription(JSON.toJSONString(gdpz, true));
-//      obj.put("extended_description", jm.getExtendedDescription());
+//        obj.put("extended_description", jm.getExtendedDescription());
         jm.setModifiedUser(user.getYhxm());
         jm.setModifiedDate(new Date());
         clzh.setModifiedUser(user.getYhxm());
@@ -583,6 +587,13 @@ public class KettleService extends BasicObject{
         case "excel":
             setParam("TG_SHEET", scpz.getString("工作表名称"));
             ExcelWriterStepMeta excel = (ExcelWriterStepMeta) scStep.getStepMetaInterface();
+            if(mbdx.getJtdx().endsWith(".xls")){
+                excel.setExtension("xls");
+            }else if(mbdx.getJtdx().endsWith(".xlsx")){
+                excel.setExtension("xlsx");
+            }else{
+                throw new MyException("excel类型的对象的具体对象的通配符后缀必须是.xls或.xlsx");
+            }
             List<ExcelWriterStepField> efl = new ArrayList<ExcelWriterStepField>();
             for(JSONObject fo:zdys.toArray(new JSONObject[zdys.size()])){
                 ExcelWriterStepField field = new ExcelWriterStepField();

@@ -84,12 +84,14 @@ public class FzptLjq extends DefaultLjq{
         db.update("update sys_sjgl_sjdx t set t.dxzt=? where t.dxdm like ?", 
                 yobj.getString("zyksjk"),"KETTLE_GLPT_%"+yobj.getString("gndmhz"));
         //复制ZYGL_前缀的权限，父权限相应修改。
-        db.update("insert into sys_qx_qxxx ( yxx,kzxx, cjrxm, cjrdm, cjrdwmc, cjrdwdm, mc, dm, ms, lx, ssyy, bz, fqx, dzlx, dkfs, dz, tb)"
-                + "select yxx,kzxx, cjrxm, cjrdm, cjrdwmc, cjrdwdm, mc, replace(dm,'ZYGL_MR','ZYGL_"+yobj.getString("gndmhz")
+        db.update("insert into sys_qx_qxxx ( px,yxx,kzxx, cjrxm, cjrdm, cjrdwmc, cjrdwdm, mc, dm, ms, lx, ssyy, bz, fqx, dzlx, dkfs, dz, tb)"
+                + "select px,yxx,kzxx, cjrxm, cjrdm, cjrdwmc, cjrdwdm, mc, replace(dm,'ZYGL_MR','ZYGL_"+yobj.getString("gndmhz")
                 +"'), ms, lx, ssyy, bz, replace(fqx,'ZYGL_MR','ZYGL_"+yobj.getString("gndmhz")
                 +"'), dzlx, dkfs, dz, tb from sys_qx_qxxx t where t.dm like 'ZYGL_MR%'");
         //修改系统根节点名称
-        db.update("update sys_qx_qxxx t set t.mc=t.mc||'-'||? where t.dm=?", yobj.getString("gnmchz"),"ZYGL_"+yobj.getString("gndmhz"));
+        db.update("update sys_qx_qxxx t set t.mc=t.mc||'-'||?,t.dz=? where t.dm=?", 
+                yobj.getString("gnmchz"),"SYS_QX_QXXX_ZYGLCD_"+yobj.getString("gndmhz"),
+                "ZYGL_"+yobj.getString("gndmhz"));
         //修改菜单的数据对象代码
         db.update("update sys_qx_qxxx t set t.dz=t.dz||'_'||? where t.dz like ? and t.dm like ?", 
                 yobj.getString("gndmhz"),"KETTLE_GLPT_%","ZYGL_"+yobj.getString("gndmhz")+"%");
