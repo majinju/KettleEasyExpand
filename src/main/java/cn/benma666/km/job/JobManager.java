@@ -282,7 +282,7 @@ public class JobManager extends AbsJob {
         Date start = new Date();
 //        JobMeta jm = KettleUtils.loadJob(jobJson.getString("name"),jobJson.getLong("id_directory"));
         JobMeta jm = KettleUtils.loadJob(jobJson.getLong(ID_JOB));
-        log.info("加载作业总耗时："+(new Date().getTime()-start.getTime())+","+jobJson);
+        log.debug("加载作业总耗时："+(new Date().getTime()-start.getTime())+","+jobJson.getString("name"));
         Map<String, JSONObject> paramMap = kettledb.
                 findMap("ocode","select * from job_params jp where jp.id_job=?", jobId);
         for(JSONObject param:paramMap.values()){

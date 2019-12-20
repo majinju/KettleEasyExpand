@@ -30,11 +30,13 @@ import com.alibaba.fastjson.JSONObject;
 public class HttpUtil extends EasyExpandRunBase{
     private static final String POST_URL = "请求url";
     private static final String POST_PARAM = "请求参数(请求参数字段:源流数据参数字段)";
+    private static final String POST_REQUEST_PROPERTY = "请求属性";
     private static final String POST_CFQQCS = "请求报错，重新请求的次数";
     private static final String POST_CSSC = "请求超时时间";
     private static final String POST_QQBM = "请求编码";
     private static final String POST_FHJGMC = "返回结果名称";
     private static final String POST_HLYC = "忽略异常";
+    private static final String POST_HELP = "帮助说明";
 
     /**
     * 具体处理每一行数据
@@ -49,37 +51,46 @@ public class HttpUtil extends EasyExpandRunBase{
         int cfqqcs = configInfo.getIntValue(POST_CFQQCS);
         int cssc = configInfo.getIntValue(POST_CSSC);
         String qqbm = configInfo.getString(POST_QQBM);
+        JSONObject requestProperty = configInfo.getJSONObject(POST_REQUEST_PROPERTY);
         //请求参数
         String params = "";
         //拼接post请求参数
         JSONObject paramObj = configInfo.getJSONObject(POST_PARAM);
-        for(String key:paramObj.keySet()){
-            try {
-                if(outputRow[getFieldIndex(paramObj.getString(key))]!=null){
-                    String value = outputRow[getFieldIndex(paramObj.getString(key))].toString();
-                    if(value.length() != value.getBytes().length){
-                        //将含有中文的字符串转为UTF-8编码格式
-                        value = URLEncoder.encode(value, cn.benma666.myutils.HttpUtil.QQBM);
-                    }
-                    params = params + key + "=" + value + "&";
-                }
-            } catch (Exception e) {
-                ku.logError("配置的参数：" + paramObj.getString(key) + "在源流数据中不存在！",e);
+        if(paramObj.size()==1&&paramObj.containsKey("jsonContent")){
+            String value = outputRow[getFieldIndex(paramObj.getString("jsonContent"))].toString();
+            params = value;
+            if(!requestProperty.containsKey("Content-type")){
+                requestProperty.put("Content-type", "application/json;charset=UTF-8");
             }
-        }
-        //去掉最后一位 '&'字符
-        if(StringUtil.isNotBlank(params)){
-            params = params.substring(0, params.length()-1);
+        }else{
+            for(String key:paramObj.keySet()){
+                try {
+                    if(outputRow[getFieldIndex(paramObj.getString(key))]!=null){
+                        String value = outputRow[getFieldIndex(paramObj.getString(key))].toString();
+                        if(value.length() != value.getBytes().length){
+                            //将含有中文的字符串转为UTF-8编码格式
+                            value = URLEncoder.encode(value, cn.benma666.myutils.HttpUtil.QQBM);
+                        }
+                        params = params + key + "=" + value + "&";
+                    }
+                } catch (Exception e) {
+                    ku.logError("配置的参数：" + paramObj.getString(key) + "在源流数据中不存在！",e);
+                }
+            }
+            //去掉最后一位 '&'字符
+            if(StringUtil.isNotBlank(params)){
+                params = params.substring(0, params.length()-1);
+            }
         }
         String msg = ""; 
         try {
-            msg = cn.benma666.myutils.HttpUtil.doPostStr(url, params,qqbm,cssc);
+            msg = cn.benma666.myutils.HttpUtil.doPostStr(url, params,qqbm,cssc,requestProperty);
         } catch (Exception e) {
             ku.logError("第一次请求报错！Url:" + url + ";Params:" + params, e);
             for(int i=1;i<=cfqqcs;i++){
                 boolean flag = true;
                 try {
-                    msg = cn.benma666.myutils.HttpUtil.doPostStr(url, params,qqbm,cssc);
+                    msg = cn.benma666.myutils.HttpUtil.doPostStr(url, params,qqbm,cssc,requestProperty);
                 } catch (Exception e2) {
                     flag = false;
                     if(i!=cfqqcs){
@@ -99,7 +110,6 @@ public class HttpUtil extends EasyExpandRunBase{
             }
         }
         outputRow[getFieldIndex(configInfo.getString(POST_FHJGMC))] = msg;
-        ku.putRow(data.outputRowMeta, outputRow);
     }
     /**
     * 
@@ -132,6 +142,8 @@ public class HttpUtil extends EasyExpandRunBase{
         params.put(POST_FHJGMC, "result");
         params.put(POST_HLYC, true);
         params.put(POST_PARAM, new JSONObject());
+        params.put(POST_REQUEST_PROPERTY, new JSONObject());
+        params.put(POST_HELP, "当只有一个参数，且参数名称为“jsonContent”时，将采用json形式发送参数");
         return JSON.toJSONString(params, true);
     }
     

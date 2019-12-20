@@ -1,51 +1,95 @@
 
 --r_job表扩展信息
-ID_JOB	INTEGER	N			主键
-ID_DIRECTORY	INTEGER	Y			目录
-NAME	VARCHAR2(255)	Y			名称
-DESCRIPTION	CLOB	Y			描述
-EXTENDED_DESCRIPTION	CLOB	Y			扩展描述;json
-JOB_VERSION	VARCHAR2(255)	Y			作业类别@KETTLE_ZYLB_YBFL
-JOB_STATUS	INTEGER	Y			作业状态
-ID_DATABASE_LOG	INTEGER	Y			日志数据库
-TABLE_NAME_LOG	VARCHAR2(255)	Y			日志表
-CREATED_USER	VARCHAR2(255)	Y			创建人
-CREATED_DATE	DATE	Y			创建时间
-MODIFIED_USER	VARCHAR2(255)	Y			修改人
-MODIFIED_DATE	DATE	Y			修改时间
-USE_BATCH_ID	CHAR(1)	Y			
-PASS_BATCH_ID	CHAR(1)	Y			
-USE_LOGFIELD	CHAR(1)	Y			
-SHARED_FILE	VARCHAR2(255)	Y			
-RUN_STATUS	VARCHAR2(100)	Y	'Stopped'		运行状态
-LAST_UPDATE	VARCHAR2(14)	Y	to_char(sysdate,'yyyymmddhh24miss')		最后更新时间
-AUTO_RESTART_NUM	VARCHAR2(10)	Y	'0'		自动重启次数
-REPOSITORY_CODE	VARCHAR2(100)	Y	'KETTLE_DEFAULT'		资源库代码
-PROJECT_CODE	VARCHAR2(500)	Y	'KM_LOCALHOST_82'		运行在
-OORDER	NUMBER	Y	9999		对象排序
-ZLSJC	VARCHAR2(14)	Y			增量时间戳
-TIMING	VARCHAR2(100)	Y			定时
-LOG_LEVEL	VARCHAR2(100)	Y	'3'		日志级别
-ZYLX	VARCHAR2(32)	Y	'cgzy'		作业类型@OTHER_KETTLE_ZYLX
-GXSX	NUMBER	Y			更新时限;单位分钟，r_job中的最后更新时间更新时限
-RZSX	NUMBER	Y			日志时限;单位分钟，日志表更新时限
-BZSX	NUMBER	Y			标志时限;单位分钟，抽取标志位时限
-SCWCSJ	VARCHAR2(14)	Y			上次完成时间
-SCZXZT	VARCHAR2(32)	Y			上次执行状态
-JCPL	VARCHAR2(64)	Y			监测频率
-GZLJ	VARCHAR2(255)	Y			工作路径
-SHELL	VARCHAR2(4000)	Y			shell脚本
-SJZT	VARCHAR2(32)	Y			数据载体
-SQL	VARCHAR2(4000)	Y			sql脚本
-JS	VARCHAR2(4000)	Y			js脚本
-KMLM	VARCHAR2(255)	Y			KM类名
-KMPZ	VARCHAR2(4000)	Y			KM配置
-LYDX	VARCHAR2(32)	Y			来源对象
-MBDX	VARCHAR2(32)	Y			目标对象
-LZMB	VARCHAR2(255)	Y			流转模板
-GDPZ	VARCHAR2(4000)	Y			更多配置
-SRZJ	VARCHAR2(32)	Y			输入组件
-SCZJ	VARCHAR2(32)	Y			输出组件
+-- Add/modify columns 
+alter table R_JOB add RUN_STATUS VARCHAR2(100) default 'Stopped';
+alter table R_JOB add LAST_UPDATE VARCHAR2(14) default to_char(sysdate,'yyyymmddhh24miss');
+alter table R_JOB add AUTO_RESTART_NUM VARCHAR2(10) default '0';
+alter table R_JOB add REPOSITORY_CODE VARCHAR2(100) default 'KETTLE_DEFAULT';
+alter table R_JOB add PROJECT_CODE VARCHAR2(500) default 'KM_LOCALHOST_82';
+alter table R_JOB add OORDER NUMBER default 9999;
+alter table R_JOB add ZLSJC VARCHAR2(14);
+alter table R_JOB add TIMING VARCHAR2(100);
+alter table R_JOB add LOG_LEVEL VARCHAR2(100) default '3';
+alter table R_JOB add ZYLX VARCHAR2(32) default 'cgzy';
+alter table R_JOB add GXSX NUMBER;
+alter table R_JOB add RZSX NUMBER;
+alter table R_JOB add BZSX NUMBER;
+alter table R_JOB add SCWCSJ VARCHAR2(14);
+alter table R_JOB add SCZXZT VARCHAR2(32);
+alter table R_JOB add JCPL VARCHAR2(64);
+alter table R_JOB add GZLJ VARCHAR2(255);
+alter table R_JOB add SHELL VARCHAR2(4000);
+alter table R_JOB add SJZT VARCHAR2(32);
+alter table R_JOB add SQL VARCHAR2(4000);
+alter table R_JOB add JS VARCHAR2(4000);
+alter table R_JOB add KMLM VARCHAR2(255);
+alter table R_JOB add KMPZ VARCHAR2(4000);
+alter table R_JOB add LYDX VARCHAR2(32);
+alter table R_JOB add MBDX VARCHAR2(32);
+alter table R_JOB add LZMB VARCHAR2(255);
+alter table R_JOB add GDPZ VARCHAR2(4000);
+alter table R_JOB add SRZJ VARCHAR2(32);
+alter table R_JOB add SCZJ VARCHAR2(32);
+-- Add comments to the columns 
+comment on column R_JOB.RUN_STATUS
+  is '运行状态';
+comment on column R_JOB.LAST_UPDATE
+  is '最后更新时间';
+comment on column R_JOB.AUTO_RESTART_NUM
+  is '自动重启次数';
+comment on column R_JOB.REPOSITORY_CODE
+  is '资源库代码';
+comment on column R_JOB.PROJECT_CODE
+  is '运行在';
+comment on column R_JOB.OORDER
+  is '对象排序';
+comment on column R_JOB.ZLSJC
+  is '增量时间戳';
+comment on column R_JOB.TIMING
+  is '定时';
+comment on column R_JOB.LOG_LEVEL
+  is '日志级别';
+comment on column R_JOB.ZYLX
+  is '作业类型@OTHER_KETTLE_ZYLX';
+comment on column R_JOB.GXSX
+  is '更新时限;单位分钟，r_job中的最后更新时间更新时限';
+comment on column R_JOB.RZSX
+  is '日志时限;单位分钟，日志表更新时限';
+comment on column R_JOB.BZSX
+  is '标志时限;单位分钟，抽取标志位时限';
+comment on column R_JOB.SCWCSJ
+  is '上次完成时间';
+comment on column R_JOB.SCZXZT
+  is '上次执行状态';
+comment on column R_JOB.JCPL
+  is '监测频率';
+comment on column R_JOB.GZLJ
+  is '工作路径';
+comment on column R_JOB.SHELL
+  is 'shell脚本';
+comment on column R_JOB.SJZT
+  is '数据载体';
+comment on column R_JOB.SQL
+  is 'sql脚本';
+comment on column R_JOB.JS
+  is 'js脚本';
+comment on column R_JOB.KMLM
+  is 'KM类名';
+comment on column R_JOB.KMPZ
+  is 'KM配置';
+comment on column R_JOB.LYDX
+  is '来源对象';
+comment on column R_JOB.MBDX
+  is '目标对象';
+comment on column R_JOB.LZMB
+  is '流转模板';
+comment on column R_JOB.GDPZ
+  is '更多配置';
+comment on column R_JOB.SRZJ
+  is '输入组件';
+comment on column R_JOB.SCZJ
+  is '输出组件';
+
 
 
 -- Create table
@@ -265,7 +309,7 @@ comment on column JOB_WARNING.SUBJECT
 comment on column JOB_WARNING.LOG_CHANNEL
   is '日志通道';
   
-  create or replace view kettle_test.v_job_params as
+create or replace view kettle_test.v_job_params as
 select ja.id_job,ja.id_job_attribute id,
 to_char(ja.value_str) as ocode,
 to_char(ja1.value_str) as oname,
