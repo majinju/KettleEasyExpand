@@ -370,6 +370,9 @@ public class JobLjq extends DefaultLjq{
         if(r.isStatus()){
             //直接数据库更新,更新最后进行，因为kettle修改作业会先删除再添加。
             myParams.put(KEY_YOBJ, yobj);
+            JSONObject pcyzgz = new JSONObject();
+            pcyzgz.put("*", "not");
+            myParams.put(KEY_PCYZGZ, pcyzgz);
             r = super.save(sjdx, myParams);
         }
         return r;

@@ -93,13 +93,13 @@ public class HttpDownload extends EasyExpandRunBase{
         }
         String msg = ""; 
         try {
-            msg = cn.benma666.myutils.HttpUtil.downLoadFromUrl(url, params,wjm, bclj, cssc,requestProperty).getAbsolutePath();
+            msg = JSON.toJSONString(cn.benma666.myutils.HttpUtil.downLoadFromUrl(url, params,wjm, bclj, cssc,requestProperty));
         } catch (Exception e) {
             ku.logError("第一次请求报错！Url:" + url + ";Params:" + params, e);
             for(int i=1;i<=cfqqcs;i++){
                 boolean flag = true;
                 try {
-                    msg = cn.benma666.myutils.HttpUtil.downLoadFromUrl(url, params,wjm, bclj, cssc,requestProperty).getAbsolutePath();
+                    msg = JSON.toJSONString(cn.benma666.myutils.HttpUtil.downLoadFromUrl(url, params,wjm, bclj, cssc,requestProperty));
                 } catch (Exception e2) {
                     flag = false;
                     if(i!=cfqqcs){

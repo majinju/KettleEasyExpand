@@ -53,7 +53,7 @@ public class KettleJobRunner extends AbsJob {
                     JobManager.getJob(jobId).join();
                     info("结束执行作业："+jobJson.getString("name"));
                 } catch (Exception e) {
-                    error("作业启动失败："+jobJson, e);
+                    error("作业执行失败："+jobJson.getString("name"), e);
                     break;
                 }
             }else{
