@@ -80,23 +80,23 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
     /**
     * <作业，作业对应的日志文件>
     */
-    public static Map<Job,FileLoggingEventListener> jobLogListener = new ConcurrentHashMap<Job, FileLoggingEventListener>();
+    public static Map<String,FileLoggingEventListener> jobLogListener = new ConcurrentHashMap<String, FileLoggingEventListener>();
     /**
-    * <作业，作业对应的日志文件>
+    * <作业，作业对应的日志监听器>
     */
     public static Map<String,FileLoggingEventListener> jobNameLogListener = new ConcurrentHashMap<String, FileLoggingEventListener>();
     /**
     * <作业，作业对应的日志文件>
     */
-    private static Map<Job,File> jobLogFile = new ConcurrentHashMap<Job, File>();
+    private static Map<String,File> jobLogFile = new ConcurrentHashMap<String, File>();
     /**
     * <作业,日志主键>
     */
-    public static Map<Job,String> jobLogOidMap = new ConcurrentHashMap<Job,String>();
+    public static Map<String,String> jobLogOidMap = new ConcurrentHashMap<String,String>();
     /**
     * <作业,开始时间>
     */
-    public static Map<Job,String> jobStartDateMap = new ConcurrentHashMap<Job,String>();
+    public static Map<String,String> jobStartDateMap = new ConcurrentHashMap<String,String>();
     /**
     * 日志对应作业
     */
@@ -129,7 +129,7 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
             boolean append, Job job) throws KettleException {
         this(logChannelId, file.getAbsolutePath(), append);
         this.job = job;
-        jobLogFile.put(job, file);
+        jobLogFile.put(job.getObjectId().getId(), file);
     }
     
     /**
@@ -180,6 +180,7 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
     * @throws Exception
     */
     public void myLogDispose(KettleLoggingEvent event,Job job, LogMessage message) throws Exception {
+        String idJob = job.getObjectId().getId();
 
         //更新日志对象的注册时间，使最新产生日志的日志对象不被移除。
         LoggingObjectInterface lo = lr.getLoggingObject(message.getLogChannelId());
@@ -209,18 +210,18 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
         String logChannel = message.getLogChannelId();
         //基于作业获取
         String logFile = "";
-        int idJob = 0;
+        int idJobInt = 0;
         String jobName = "未知作业："+Thread.currentThread().getName();
-        if (job!=null&&jobLogFile.get(job) != null) {
-            logFile = jobLogFile.get(job).getAbsolutePath();
-            idJob = Integer.parseInt(job.getObjectId().getId());
+        if (job!=null&&jobLogFile.get(idJob) != null) {
+            logFile = jobLogFile.get(idJob).getAbsolutePath();
+            idJobInt = Integer.parseInt(idJob);
             jobName = job.getJobMeta().getName();
         }
         //插入到数据库
         JobManager.kettledb.update(
                 "insert into job_warning(id_job,job_name,log_file,msg, log_level, error, "
                 + "subject,log_channel) values(?,?,?,?,?,?,?,?)",
-                idJob, jobName, logFile, msg,logLevel,error,subject,logChannel);
+                idJobInt, jobName, logFile, msg,logLevel,error,subject,logChannel);
     }
 
     /**
@@ -242,8 +243,9 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
     * @throws KettleException
     */
     public static void checkLogFileSize(Job job) throws KettleException {
+        String idJob = job.getObjectId().getId();
         // 日志文件大小判断
-        if (jobLogFile.get(job) != null&& jobLogFile.get(job).length() > 
+        if (jobLogFile.get(idJob) != null&& jobLogFile.get(idJob).length() > 
                 JobManager.getLogFileSize() * 1024 * 1024) {
             // 每个日志文件记录一条作业日志，用户可以根据时间区间选择要下载的日志。
             synchronized ( jobNameLogListener ) {
@@ -271,11 +273,13 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
     * @throws KettleException
     */
     public static void close(Job job) throws KettleException {
+        String idJob = job.getObjectId().getId();
         synchronized ( jobNameLogListener ) {
-            FileLoggingEventListener l = jobLogListener.get(job);
+            FileLoggingEventListener l = jobLogListener.get(idJob);
             l.close();
-            jobLogFile.remove(job);
-            jobLogListener.remove(job);
+            jobLogFile.remove(idJob);
+            jobLogOidMap.remove(idJob);
+            jobLogListener.remove(idJob);
             jobNameLogListener.remove(job.getJobMeta().getName());
         }
         updateJoblog(job);
@@ -288,13 +292,14 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
     * @throws KettleException
     */
     public static void addJobLogFile(Job job) throws KettleException {
+        String idJob = job.getObjectId().getId();
         synchronized ( jobNameLogListener ) {
             // 记录日志记录的主键，用于更新
-            jobLogOidMap.put(job, StringUtil.getUUIDUpperStr());
-            jobStartDateMap.put(job, DateUtil.getGabDate());
+            jobLogOidMap.put(idJob, StringUtil.getUUIDUpperStr());
+            jobStartDateMap.put(idJob, DateUtil.getGabDate());
             FileLoggingEventListener fileAppender = new FileLoggingEventListener(
                     job.getLogChannelId(),getNewLogFile(job), true , job);
-            jobLogListener.put(job, fileAppender);
+            jobLogListener.put(idJob, fileAppender);
             jobNameLogListener.put(job.getJobMeta().getName(), fileAppender);
         }
     }
@@ -305,6 +310,7 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
     * @return
     */
     public static File getNewLogFile(Job job) {
+        String idJob = job.getObjectId().getId();
         File logFile;
         logFile = new File(JobManager.getLogFileRoot()+UtilConst.FXG
                 +DateUtil.doFormatDate(new Date(), DateUtil.DATE_FORMATTER8));
@@ -314,13 +320,13 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
         logFile = new File(logFile.getAbsolutePath()+UtilConst.FXG
                 +job.getJobname()+"_"+DateUtil.doFormatDate(new Date(), 
                         "HHmmss")+".txt");
-        jobLogFile.put(job, logFile);
+        jobLogFile.put(idJob, logFile);
         //生成日志文件时就插入日志记录，便于用户在运行中查询下载作业日志，因为作业管理只显示最近时间的实时日志
-        JobManager.kettledb.update(SQL_INSERT_JOB_LOG, jobLogOidMap.get(job),
-                Integer.parseInt(job.getObjectId().getId()),
-                job.getJobMeta().getName(),jobStartDateMap.get(job),
+        JobManager.kettledb.update(SQL_INSERT_JOB_LOG, jobLogOidMap.get(idJob),
+                Integer.parseInt(idJob),
+                job.getJobMeta().getName(),jobStartDateMap.get(idJob),
                 logFile.getAbsolutePath());
-        jobStartDateMap.remove(job);
+        jobStartDateMap.remove(idJob);
         return logFile;
     }
     /**
@@ -332,7 +338,7 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
         String dqsj = JobManager.kettledb.getCurrentDateStr14();
         JobManager.kettledb.update(SQL_UPDATE_JOB_LOG, 
                 dqsj,getJobStatus(job),
-                dqsj,jobLogOidMap.get(job));
+                dqsj,jobLogOidMap.get(job.getObjectId().getId()));
     }
     /**
     * 获取作业运行状态 <br/>

@@ -216,7 +216,7 @@ public class JobManager extends AbsJob {
                       }
                     }
                     //刷新日志文件
-                    FileLoggingEventListener ll = FileLoggingEventListener.jobLogListener.get(job);
+                    FileLoggingEventListener ll = FileLoggingEventListener.jobLogListener.get(job.getObjectId().getId());
                     if(ll.getLastupdate().getTime()>updateFlag1.getTime()){
                         if(isWriteLogFile()){
                             ll.getOutputStream().flush();
