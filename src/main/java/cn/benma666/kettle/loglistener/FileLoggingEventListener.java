@@ -180,7 +180,6 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
     * @throws Exception
     */
     public void myLogDispose(KettleLoggingEvent event,Job job, LogMessage message) throws Exception {
-        String idJob = job.getObjectId().getId();
 
         //更新日志对象的注册时间，使最新产生日志的日志对象不被移除。
         LoggingObjectInterface lo = lr.getLoggingObject(message.getLogChannelId());
@@ -212,7 +211,8 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
         String logFile = "";
         int idJobInt = 0;
         String jobName = "未知作业："+Thread.currentThread().getName();
-        if (job!=null&&jobLogFile.get(idJob) != null) {
+        if (job!=null&&jobLogFile.get(job.getObjectId().getId()) != null) {
+            String idJob = job.getObjectId().getId();
             logFile = jobLogFile.get(idJob).getAbsolutePath();
             idJobInt = Integer.parseInt(idJob);
             jobName = job.getJobMeta().getName();

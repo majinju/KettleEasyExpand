@@ -167,6 +167,7 @@ public class JobManager extends AbsJob {
     protected void process() throws Exception {
         //要重启的作业
         List<JSONObject> restartList = new ArrayList<JSONObject>();
+//        new ZlbdHmbd().init(null);
         //遍历运行的作业
         synchronized (jobMap) {
             Iterator<Entry<String, Job>> jobIter = jobMap.entrySet().iterator();
@@ -275,29 +276,31 @@ public class JobManager extends AbsJob {
     * @throws Exception
     */
     public static String startJob(JSONObject jobJson) throws Exception {
-        String jobId = jobJson.getString(ID_JOB);
-        if(jobMap.containsKey(jobId)){
-            return jobMap.get(jobId).getStatus();
-        }
-        Date start = new Date();
-//        JobMeta jm = KettleUtils.loadJob(jobJson.getString("name"),jobJson.getLong("id_directory"));
-        JobMeta jm = KettleUtils.loadJob(jobJson.getLong(ID_JOB));
-        log.debug("加载作业总耗时："+(new Date().getTime()-start.getTime())+","+jobJson.getString("name"));
-        Map<String, JSONObject> paramMap = kettledb.
-                findMap("ocode","select * from job_params jp where jp.id_job=?", jobId);
-        for(JSONObject param:paramMap.values()){
-            //设置参数
-            jm.setParameterValue(param.getString(UtilConst.FIELD_OCODE),
-                    param.getString("value"));
-        }
-        jm.setLogLevel(LogLevel.getLogLevelForCode(DictManager.zdMcByDm("KETTLE_LOG_LEVEL", jobJson.getString("log_level"))));
-        Job job = new Job(KettleUtils.getInstanceRep(), jm);
-        job.setLogLevel(jm.getLogLevel());
-        jsonjobMap.put(job, jobJson);
+        synchronized (jobMap) {
+            String jobId = jobJson.getString(ID_JOB);
+            if(jobMap.containsKey(jobId)){
+                return jobMap.get(jobId).getStatus();
+            }
+            Date start = new Date();
+//            JobMeta jm = KettleUtils.loadJob(jobJson.getString("name"),jobJson.getLong("id_directory"));
+            JobMeta jm = KettleUtils.loadJob(jobJson.getLong(ID_JOB));
+            log.debug("加载作业总耗时："+(new Date().getTime()-start.getTime())+","+jobJson.getString("name"));
+            Map<String, JSONObject> paramMap = kettledb.
+                    findMap("ocode","select * from job_params jp where jp.id_job=?", jobId);
+            for(JSONObject param:paramMap.values()){
+                //设置参数
+                jm.setParameterValue(param.getString(UtilConst.FIELD_OCODE),
+                        param.getString("value"));
+            }
+            jm.setLogLevel(LogLevel.getLogLevelForCode(DictManager.zdMcByDm("KETTLE_LOG_LEVEL", jobJson.getString("log_level"))));
+            Job job = new Job(KettleUtils.getInstanceRep(), jm);
+            job.setLogLevel(jm.getLogLevel());
+            jsonjobMap.put(job, jobJson);
 
-        TimingUtil.saveTiming(TimingUtil.showTextByJobid(Integer.parseInt(jobId)),Integer.parseInt(jobId));
-        
-        return startJob(job);
+            TimingUtil.saveTiming(TimingUtil.showTextByJobid(Integer.parseInt(jobId)),Integer.parseInt(jobId));
+            
+            return startJob(job);
+        }
     }
     /**
     * 启动作业 <br/>
