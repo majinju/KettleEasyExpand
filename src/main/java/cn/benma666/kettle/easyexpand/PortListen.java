@@ -21,6 +21,7 @@ import org.productivity.java.syslog4j.Syslog;
 import org.productivity.java.syslog4j.SyslogIF;
 
 import cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase;
+import cn.benma666.myutils.JsonResult;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -60,11 +61,12 @@ public class PortListen extends EasyExpandRunBase{
     }
     /**
     * 具体处理每一行数据
+     * @return 
      * @throws Exception 
     * @see cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase#disposeRow(java.lang.Object[])
     */
     @Override
-    protected void disposeRow(Object[] outputRow) throws Exception {
+    protected JsonResult disposeRow(Object[] outputRow) throws Exception {
         DatagramSocket datagramSocket;
         try {
             datagramSocket = new DatagramSocket(configInfo.getIntValue(LISTEN_PORT));
@@ -99,6 +101,7 @@ public class PortListen extends EasyExpandRunBase{
                 datagramSocket.close();
             }
         }
+        return success("完成");
     }
     /**
     * 

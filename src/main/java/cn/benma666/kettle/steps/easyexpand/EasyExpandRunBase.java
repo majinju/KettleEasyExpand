@@ -20,7 +20,9 @@ import org.pentaho.di.trans.Trans;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.StepMeta;
 
+import cn.benma666.iframe.BasicObject;
 import cn.benma666.kettle.mytuils.KettleUtils;
+import cn.benma666.myutils.JsonResult;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -32,7 +34,7 @@ import com.alibaba.fastjson.JSONObject;
  * @author jingma
  * @version 
  */
-public abstract class EasyExpandRunBase {
+public abstract class EasyExpandRunBase extends BasicObject{
     public static final String HELP_INFO = "帮助信息";
     protected Log log = LogFactory.getLog(getClass());
     /**
@@ -41,6 +43,10 @@ public abstract class EasyExpandRunBase {
     protected EasyExpand ku;
     protected EasyExpandMeta meta;
     protected EasyExpandData data;
+    /**
+     * 输入数据行
+     */
+    protected Object[] inputRow;
     /**
     * 配置信息
     */
@@ -70,8 +76,8 @@ public abstract class EasyExpandRunBase {
     * @throws KettleException 
     */
     public boolean run() throws Exception{
-        Object[] r = ku.getRow(); // get row, blocks when needed!
-        if (r == null) // no more input to be expected...
+        inputRow = ku.getRow(); // get row, blocks when needed!
+        if (inputRow == null) // no more input to be expected...
         {
             end();
             ku.setOutputDone();
@@ -84,11 +90,14 @@ public abstract class EasyExpandRunBase {
             init();
         }
         //创建输出记录
-        Object[] outputRow = RowDataUtil.createResizedCopy( r, data.outputRowMeta.size() );
-        disposeRow(outputRow);
-        //将该记录设置到下一步骤的读取序列中
-        ku.putRow(data.outputRowMeta, outputRow); // copy row to possible alternate rowset(s)
-        return true;
+        Object[] outputRow = RowDataUtil.createResizedCopy( inputRow, data.outputRowMeta.size() );
+        JsonResult result = disposeRow(outputRow);
+        //99：不推送数据到下一步
+        if(!"99".equals(result.getMsg())){
+            //将该记录设置到下一步骤的读取序列中
+            ku.putRow(data.outputRowMeta, outputRow);
+        }
+        return result.isStatus();
     }
 
     /**
@@ -103,9 +112,10 @@ public abstract class EasyExpandRunBase {
     * 处理具体每一行数据 <br/>
     * @author jingma
     * @param outputRow
+     * @return 
     */
-    protected void disposeRow(Object[] outputRow) throws Exception{
-        
+    protected JsonResult disposeRow(Object[] outputRow) throws Exception{
+        return success("默认什么也不做");
     }
 
     /**
@@ -142,10 +152,11 @@ public abstract class EasyExpandRunBase {
     * @param trimType 去除空白规则
     * @param origin 宿主
     * @param comments 描述
+     * @return 
     */
-    protected void addField(RowMetaInterface r, String name, int type,
+    protected ValueMetaInterface addField(RowMetaInterface r, String name, int type,
             int trimType, String origin, String comments) {
-        addField(r, name, type, trimType, origin,comments, 0);
+        return addField(r, name, type, trimType, origin,comments, 0);
     }
     
     /**
@@ -158,9 +169,10 @@ public abstract class EasyExpandRunBase {
     * @param origin 宿主
     * @param comments 描述
     * @param length 长度
+     * @return 
     */
     @SuppressWarnings("deprecation")
-    protected void addField(RowMetaInterface r, String name, int type,
+    protected ValueMetaInterface addField(RowMetaInterface r, String name, int type,
             int trimType, String origin, String comments, int length) {
         ValueMetaInterface v = new ValueMeta();
         v.setName(name.toUpperCase());
@@ -172,6 +184,7 @@ public abstract class EasyExpandRunBase {
             v.setLength(length);
         }
         r.addValueMeta(v);
+        return v;
     }
     /**
     * 获取输出字段在数组中的下标 <br/>

@@ -16,6 +16,7 @@ import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.StepMeta;
 
 import cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase;
+import cn.benma666.myutils.JsonResult;
 import cn.benma666.myutils.WebserviceUtil;
 
 import com.alibaba.fastjson.JSON;
@@ -41,10 +42,11 @@ public class WebService extends EasyExpandRunBase{
     private WebserviceUtil invoker;
     /**
     * 具体处理每一行数据
+     * @return 
     * @see cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase#disposeRow(java.lang.Object[])
     */
     @Override
-    protected void disposeRow(Object[] outputRow) {
+    protected JsonResult disposeRow(Object[] outputRow) {
         Vector<String> ps = new Vector<String>();
         for(String p:configInfo.getJSONArray(PARAMS_ARR).toArray(new String[]{})){
             ps.addElement(outputRow[getFieldIndex(p)].toString());
@@ -58,6 +60,7 @@ public class WebService extends EasyExpandRunBase{
         } catch (Exception e) {
             throw new RuntimeException("请求失败",e);
         }
+        return success("完成");
     }
     /**
     * 

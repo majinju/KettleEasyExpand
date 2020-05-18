@@ -4,29 +4,29 @@
 * Copyright (c) 2016, jingma All Rights Reserved.
 */
 
-package cn.benma666.kettle.easyexpand;
+package cn.benma666.bdhc;
 
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.row.ValueMeta;
+import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.core.variables.VariableSpace;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.StepMeta;
 
-import cn.benma666.kettle.mytuils.KettleUtils;
 import cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase;
 import cn.benma666.myutils.JsonResult;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 /**
- * EasyExpand 运行示例<br/>
+ * 比对核查-全量比对-资源过滤<br/>
  * date: 2016年6月29日 <br/>
  * @author jingma
  * @version 
  */
-public class EasyExpandDemo extends EasyExpandRunBase{
+public class QlbdZygl extends EasyExpandRunBase{
+    
     /**
     * 具体处理每一行数据
      * @return 
@@ -34,24 +34,34 @@ public class EasyExpandDemo extends EasyExpandRunBase{
     */
     @Override
     protected JsonResult disposeRow(Object[] outputRow) throws Exception{
-        //设置JOB名称
-        outputRow[getFieldIndex("JOB_NAME")] = KettleUtils.getRootJobName(ku);
-        return success("完成");
+        RowMetaInterface irm = ku.getInputRowMeta();
+        JSONObject hm = new JSONObject(100);
+        for(int i=0;i<irm.size();i++){
+            ValueMetaInterface vm = irm.getValueMeta(i);
+            hm.put(vm.getName().toLowerCase(), inputRow[ku.getInputRowMeta().indexOfValue(vm.getName())]);
+        }
+        if(BdhcUtil.isZy(getVariavle("HCFS"), getVariavle("ZYLB"), hm)){
+            //该号码需要比对本资源
+            outputRow = new Object[1];
+            outputRow[getFieldIndex("HMOBJ")] = hm;
+            ku.putRow(data.outputRowMeta, outputRow);
+        }
+        return success("99");
     }
     /**
     * 
     * @see cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase#init()
     */
     @Override
-    protected void init() throws Exception{
-        ku.logBasic("初始化插件");
+    protected void init() {
+        
     }
     /**
     * 
     * @see cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase#end()
     */
     @Override
-    protected void end() throws Exception{
+    protected void end() {
         ku.logBasic("数据处理结束");
     }
 
@@ -63,32 +73,15 @@ public class EasyExpandDemo extends EasyExpandRunBase{
      public String getDefaultConfigInfo(TransMeta transMeta, String stepName) throws Exception{
         //创建一个JSON对象，用于构建配置对象，避免直接拼字符串构建JSON字符串
         JSONObject params = new JSONObject();
-        //设置一个参数key1
-        params.put("key1", "");
-        RowMetaInterface fields = transMeta.getPrevStepFields(stepName);
-        if(fields.size()==0){
-            throw new RuntimeException("没有获取到上一步骤的字段，请确认连接好上一步骤");
-        }
-        params.put("PrevInfoFields", fields.toString());
-        //创建一个JSON数组对象，用于存放数组参数
-        JSONArray arr = new JSONArray();
-        arr.add("arr1");
-        arr.add("arr2");
-        params.put("array", arr);
-        //生成的参数样例
-        //{
-        //  "array":[
-        //          "arr1",
-        //          "arr2"
-        //  ],
-        //  "key1":""
-        //}
         //返回格式化后的默认JSON配置参数，供使用者方便快捷的修改配置
         return JSON.toJSONString(params, true);
     }
     
-    public void getFields(RowMetaInterface r, String origin, RowMetaInterface[] info, StepMeta nextStep, VariableSpace space) {
-        //添加输出到下一步的字段
-        addField(r,"JOB_NAME",ValueMeta.TYPE_STRING,ValueMeta.TRIM_TYPE_BOTH,origin,"JOB名称");
+    public void getFields(RowMetaInterface r, String origin, RowMetaInterface[] info, 
+            StepMeta nextStep, VariableSpace space) {
+        //将转换好的号码JSON对象传到下一步
+        r.clear();
+        addField(r,"HMOBJ",ValueMeta.TYPE_NONE,
+                ValueMeta.TRIM_TYPE_NONE,origin,"号码对象");
     }
 }

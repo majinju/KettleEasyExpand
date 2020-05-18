@@ -4,29 +4,43 @@
 * Copyright (c) 2016, jingma All Rights Reserved.
 */
 
-package cn.benma666.kettle.easyexpand;
+package cn.benma666.bdhc;
 
+import java.util.List;
+
+import org.pentaho.di.core.row.RowDataUtil;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.row.ValueMeta;
 import org.pentaho.di.core.variables.VariableSpace;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.StepMeta;
 
-import cn.benma666.kettle.mytuils.KettleUtils;
+import cn.benma666.iframe.DictManager;
+import cn.benma666.kettle.mytuils.Db;
 import cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase;
 import cn.benma666.myutils.JsonResult;
+import cn.benma666.myutils.TmplUtil;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 /**
- * EasyExpand 运行示例<br/>
+ * 比对核查-全量比对-号码比对<br/>
+ * 注意性能优化，本系统考虑十亿级比对号码支持
  * date: 2016年6月29日 <br/>
  * @author jingma
  * @version 
  */
-public class EasyExpandDemo extends EasyExpandRunBase{
+public class QlbdHmbd extends EasyExpandRunBase{
+    /**
+    * 资源数据载体
+    */
+    private cn.benma666.db.Db zydb;
+    /**
+    * 核查语句模板
+    */
+    private String hcyj;
+
     /**
     * 具体处理每一行数据
      * @return 
@@ -34,24 +48,37 @@ public class EasyExpandDemo extends EasyExpandRunBase{
     */
     @Override
     protected JsonResult disposeRow(Object[] outputRow) throws Exception{
-        //设置JOB名称
-        outputRow[getFieldIndex("JOB_NAME")] = KettleUtils.getRootJobName(ku);
-        return success("完成");
+        JSONObject hm = (JSONObject)outputRow[getFieldIndex("HMOBJ")];
+        hm.put("hcfs", "02");
+        List<JSONObject> list = zydb.find(TmplUtil.buildStrSql(hcyj, hm));
+        if(list.size()>0){
+            ku.logBasic(hm.getString("bdhm")+"比中数据量："+list.size());
+        }
+        for(JSONObject zy:list){
+            Object[] or1 = RowDataUtil.createResizedCopy( outputRow, data.outputRowMeta.size() );
+            or1[getFieldIndex("ZYOBJ")] = zy;
+            ku.putRow(data.outputRowMeta, or1);
+        }
+        return success("99");
     }
     /**
     * 
     * @see cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase#init()
     */
     @Override
-    protected void init() throws Exception{
-        ku.logBasic("初始化插件");
+    protected void init() {
+        //资源类别
+        DictManager.clearDict("SYS_BDHC_ZY");
+        JSONObject zy = DictManager.zdObjByDmByCache("SYS_BDHC_ZY", getVariavle("ZYLB"));
+        zydb = Db.use(zy.getString("sjzt"));
+        hcyj = zy.getString("hcyj");
     }
     /**
     * 
     * @see cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase#end()
     */
     @Override
-    protected void end() throws Exception{
+    protected void end() {
         ku.logBasic("数据处理结束");
     }
 
@@ -63,32 +90,13 @@ public class EasyExpandDemo extends EasyExpandRunBase{
      public String getDefaultConfigInfo(TransMeta transMeta, String stepName) throws Exception{
         //创建一个JSON对象，用于构建配置对象，避免直接拼字符串构建JSON字符串
         JSONObject params = new JSONObject();
-        //设置一个参数key1
-        params.put("key1", "");
-        RowMetaInterface fields = transMeta.getPrevStepFields(stepName);
-        if(fields.size()==0){
-            throw new RuntimeException("没有获取到上一步骤的字段，请确认连接好上一步骤");
-        }
-        params.put("PrevInfoFields", fields.toString());
-        //创建一个JSON数组对象，用于存放数组参数
-        JSONArray arr = new JSONArray();
-        arr.add("arr1");
-        arr.add("arr2");
-        params.put("array", arr);
-        //生成的参数样例
-        //{
-        //  "array":[
-        //          "arr1",
-        //          "arr2"
-        //  ],
-        //  "key1":""
-        //}
         //返回格式化后的默认JSON配置参数，供使用者方便快捷的修改配置
         return JSON.toJSONString(params, true);
     }
     
     public void getFields(RowMetaInterface r, String origin, RowMetaInterface[] info, StepMeta nextStep, VariableSpace space) {
         //添加输出到下一步的字段
-        addField(r,"JOB_NAME",ValueMeta.TYPE_STRING,ValueMeta.TRIM_TYPE_BOTH,origin,"JOB名称");
+        addField(r,"ZYOBJ",ValueMeta.TYPE_NONE,
+                ValueMeta.TRIM_TYPE_NONE,origin,"资源对象");
     }
 }

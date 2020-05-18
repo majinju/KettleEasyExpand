@@ -311,9 +311,9 @@ public class JobManager extends AbsJob {
     * @throws Exception
     */
     public synchronized static String startJob(Job job) throws KettleException{
-        jobMap.put(job.getObjectId().getId(), job);
         FileLoggingEventListener.addJobLogFile(job);
         job.start();
+        jobMap.put(job.getObjectId().getId(), job);
         String status = FileLoggingEventListener.getJobStatus(job);
         log.info("作业启动完成："+job.getJobname());
         return status;

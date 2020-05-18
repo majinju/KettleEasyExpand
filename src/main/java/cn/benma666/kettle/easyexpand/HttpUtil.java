@@ -16,6 +16,7 @@ import org.pentaho.di.trans.step.StepMeta;
 
 import cn.benma666.exception.MyException;
 import cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase;
+import cn.benma666.myutils.JsonResult;
 import cn.benma666.myutils.StringUtil;
 
 import com.alibaba.fastjson.JSON;
@@ -40,10 +41,11 @@ public class HttpUtil extends EasyExpandRunBase{
 
     /**
     * 具体处理每一行数据
+     * @return 
     * @see cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase#disposeRow(java.lang.Object[])
     */
     @Override
-    protected void disposeRow(Object[] outputRow) throws Exception {
+    protected JsonResult disposeRow(Object[] outputRow) throws Exception {
         String url = configInfo.getString(POST_URL);
         if(url.startsWith("lyzd:")){
             url = outputRow[getFieldIndex(url.substring("lyzd:".length()))].toString();
@@ -110,6 +112,7 @@ public class HttpUtil extends EasyExpandRunBase{
             }
         }
         outputRow[getFieldIndex(configInfo.getString(POST_FHJGMC))] = msg;
+        return success("完成");
     }
     /**
     * 

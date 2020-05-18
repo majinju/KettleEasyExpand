@@ -22,6 +22,7 @@ import org.productivity.java.syslog4j.server.SyslogServerEventHandlerIF;
 import org.productivity.java.syslog4j.server.SyslogServerIF;
 
 import cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase;
+import cn.benma666.myutils.JsonResult;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -33,14 +34,7 @@ import com.alibaba.fastjson.JSONObject;
 * @version 
 */
 public class MySyslogServer extends EasyExpandRunBase{
-    /**
-    * 
-    */
     private static final String LISTEN_TYPE = "监听类型";
-
-    /**
-    * 
-    */
     private static final String LISTEN_PORT = "监听端口";
     
     private SyslogServerIF serverIF = null;
@@ -76,11 +70,12 @@ public class MySyslogServer extends EasyExpandRunBase{
     }
     /**
     * 具体处理每一行数据
+     * @return 
      * @throws Exception 
     * @see cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase#disposeRow(java.lang.Object[])
     */
     @Override
-    protected void disposeRow(Object[] outputRow) throws Exception {
+    protected JsonResult disposeRow(Object[] outputRow) throws Exception {
         serverIF = SyslogServer.getInstance(configInfo.getString(LISTEN_TYPE));
         Thread jtxc = null;
         try {
@@ -120,6 +115,7 @@ public class MySyslogServer extends EasyExpandRunBase{
         } catch (Exception e) {
             ku.logError("", e);
         }
+        return success("完成");
     }
     /**
     * 

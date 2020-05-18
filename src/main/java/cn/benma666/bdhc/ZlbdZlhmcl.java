@@ -4,13 +4,10 @@
 * Copyright (c) 2016, jingma All Rights Reserved.
 */
 
-package cn.benma666.kettle.easyexpand;
-
-import java.security.MessageDigest;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+package cn.benma666.bdhc;
 
 import org.pentaho.di.core.row.RowMetaInterface;
+import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.core.variables.VariableSpace;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.StepMeta;
@@ -22,49 +19,30 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 /**
- * JINDU接口密码生成<br/>
- * date: 2016年6月29日 <br/>
+ * 比对核查-增量比对-增量号码处理<br/>
  * @author jingma
  * @version 
  */
-public class JdzdPassword extends EasyExpandRunBase{
+public class ZlbdZlhmcl extends EasyExpandRunBase{
+    
     /**
     * 具体处理每一行数据
      * @return 
     * @see cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase#disposeRow(java.lang.Object[])
     */
     @Override
-    protected JsonResult disposeRow(Object[] outputRow) {
-        outputRow[getFieldIndex("PASSWORD")] = getPassword(outputRow[getFieldIndex("PASSWORD")].toString());
+    protected JsonResult disposeRow(Object[] outputRow) throws Exception{
+        JSONObject r = new JSONObject();
+        RowMetaInterface irm = ku.getInputRowMeta();
+        for(int i=0;i<irm.size();i++){
+            ValueMetaInterface vm = irm.getValueMeta(i);
+            r.put(vm.getName().toLowerCase(), outputRow[getFieldIndex(vm.getName())]);
+        }
+        ku.logDebug("新增比对号码："+r);
+        //以后可以考虑将比对号码对应的全部号码存在value中，但因为比中毕竟是少数，所以暂时不考虑
+        ZlbdHmbd.bhhmMap.put(r.getString(ZlbdHmbd.FIELD_HCZJLX)+"_"
+                +r.getString(ZlbdHmbd.FIELD_HCZJHM), r);
         return success("完成");
-    }
-    public static String getPassword(String pw) {
-        SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
-        String nowDate = df.format(new Date());
-        return getSha( pw+ nowDate);
-    }
-    
-    public static String getSha(String str) {
-        if(str == null || str.length() == 0) {
-            return null;
-        }
-        char hexDigits[] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
-        try{
-            MessageDigest mdTemp = MessageDigest.getInstance("SHA1");
-            mdTemp.update(str.getBytes("UTF-8"));
-            byte[] md = mdTemp.digest();
-            int j = md.length;
-            char buf[] = new char[j*2];
-            int k = 0;
-            for(int i=0; i<j; i++) {
-                byte byte0 = md[i];
-                buf[k++] = hexDigits[byte0 >>> 4 & 0xf];
-                buf[k++] = hexDigits[byte0 & 0xf];
-            }
-            return new String(buf);
-        } catch(Exception e) {
-            return null;
-        }
     }
     /**
     * 
@@ -88,11 +66,12 @@ public class JdzdPassword extends EasyExpandRunBase{
      */
      @Override
      public String getDefaultConfigInfo(TransMeta transMeta, String stepName) throws Exception{
+        //创建一个JSON对象，用于构建配置对象，避免直接拼字符串构建JSON字符串
         JSONObject params = new JSONObject();
+        //返回格式化后的默认JSON配置参数，供使用者方便快捷的修改配置
         return JSON.toJSONString(params, true);
     }
     
     public void getFields(RowMetaInterface r, String origin, RowMetaInterface[] info, StepMeta nextStep, VariableSpace space) {
-        
     }
 }
