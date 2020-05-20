@@ -43,14 +43,6 @@ import com.alibaba.fastjson.JSONObject;
  */
 public class ZlbdHmbd extends EasyExpandRunBase implements WebInitInterface{
     /**
-    * 字段-核查证件号码
-    */
-    public static final String FIELD_HCZJHM = "hczjhm";
-    /**
-    * 字段-核查证件类型
-    */
-    public static final String FIELD_HCZJLX = "hczjlx";
-    /**
     * 比对号码缓存<比对号码，对应备用信息>，初始化全量加载，之后定时增量追加<br/>
     * 当比中后没有查询到该比对号码对应的号码信息时则移除该号码。
     */
@@ -70,12 +62,12 @@ public class ZlbdHmbd extends EasyExpandRunBase implements WebInitInterface{
                 ValueMetaInterface vm = irm.getValueMeta(i);
                 zy.put(vm.getName().toLowerCase(), inputRow[ku.getInputRowMeta().indexOfValue(vm.getName())]);
             }
-            ku.logBasic("比中了："+zy);
+            ku.logDebug("比中了："+zy);
             
             JSONObject h = bhhmMap.get(zy.getString("bdhm"));
             //查询出所有比中的号码
-            List<JSONObject> hms = Db.use().find("bdhc.selectHmByHchm", 
-                    Db.buildMap(h.getString(FIELD_HCZJLX),h.getString(FIELD_HCZJHM)));
+            List<JSONObject> hms = BdhcUtil.bdhcDb.find("bdhc.selectHmByHchm", 
+                    Db.buildMap(h.getString(BdhcUtil.FIELD_HCZJLX),h.getString(BdhcUtil.FIELD_HCZJHM)));
             if(hms.isEmpty()){
                 //该比对号码没有对应的比对号码了,移除该比对号码
                 bhhmMap.remove(zy.getString("bdhm"));
@@ -140,7 +132,8 @@ public class ZlbdHmbd extends EasyExpandRunBase implements WebInitInterface{
     @Override
     public void init(ServletContext arg0) {
         log.info("开始加载比对号码缓存数据");
-        final SQLManager sm = Db.use().getSqlManager();
+        BdhcUtil.bdhcDb = Db.use("bdhc_default");
+        final SQLManager sm = BdhcUtil.bdhcDb.getSqlManager();
         sm.executeOnConnection(new OnConnection<Map<String, JSONObject>>() {
             @Override
             public Map<String, JSONObject> call(Connection conn) throws SQLException {
@@ -155,7 +148,7 @@ public class ZlbdHmbd extends EasyExpandRunBase implements WebInitInterface{
                 for(int i=1;i<=colNum;i++){
                     hmyl.put(md.getColumnName(i).toLowerCase(), rs.getObject(i));
                 }
-                bhhmMap.put(hmyl.getString(FIELD_HCZJLX)+"_"+hmyl.getString(FIELD_HCZJHM), hmyl);
+                bhhmMap.put(hmyl.getString(BdhcUtil.FIELD_HCZJLX)+"_"+hmyl.getString(BdhcUtil.FIELD_HCZJHM), hmyl);
                 log.info("1-号码加载样例："+hmyl);
                 int row = 2;
                 JSONObject r = null;
@@ -167,7 +160,7 @@ public class ZlbdHmbd extends EasyExpandRunBase implements WebInitInterface{
                         r.put(key, rs.getObject(i++));
                     }
                     //以后可以考虑将比对号码对应的全部号码存在value中，但因为比中毕竟是少数，所以暂时不考虑
-                    bhhmMap.put(r.getString(FIELD_HCZJLX)+"_"+r.getString(FIELD_HCZJHM), r);
+                    bhhmMap.put(r.getString(BdhcUtil.FIELD_HCZJLX)+"_"+r.getString(BdhcUtil.FIELD_HCZJHM), r);
                     log.debug((row++)+"-每行号码信息："+r);
                 }
                 rs.close();

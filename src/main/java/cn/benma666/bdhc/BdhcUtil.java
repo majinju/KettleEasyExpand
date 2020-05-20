@@ -6,6 +6,7 @@
 
 package cn.benma666.bdhc;
 
+import cn.benma666.db.Db;
 import cn.benma666.iframe.DictManager;
 import cn.benma666.myutils.StringUtil;
 
@@ -19,6 +20,19 @@ import com.alibaba.fastjson.JSONObject;
  * @version 
  */
 public class BdhcUtil {
+    /**
+    * 字段-核查证件号码
+    */
+    public static final String FIELD_HCZJHM = "hczjhm";
+    /**
+    * 字段-核查证件类型
+    */
+    public static final String FIELD_HCZJLX = "hczjlx";
+    
+    /**
+    * 比对核查数据库
+    */
+    public static Db bdhcDb;
 
     /**
     * 这个号码是否需要比对该资源 <br/>

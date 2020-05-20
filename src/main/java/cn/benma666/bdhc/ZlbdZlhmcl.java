@@ -40,8 +40,8 @@ public class ZlbdZlhmcl extends EasyExpandRunBase{
         }
         ku.logDebug("新增比对号码："+r);
         //以后可以考虑将比对号码对应的全部号码存在value中，但因为比中毕竟是少数，所以暂时不考虑
-        ZlbdHmbd.bhhmMap.put(r.getString(ZlbdHmbd.FIELD_HCZJLX)+"_"
-                +r.getString(ZlbdHmbd.FIELD_HCZJHM), r);
+        ZlbdHmbd.bhhmMap.put(r.getString(BdhcUtil.FIELD_HCZJLX)+"_"
+                +r.getString(BdhcUtil.FIELD_HCZJHM), r);
         return success("完成");
     }
     /**

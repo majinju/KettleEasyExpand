@@ -36,6 +36,7 @@ import com.alibaba.fastjson.JSONObject;
 public class Zyycl extends EasyExpandRunBase{
     
     private static final String P_JGZDPZ = "结果字段配置";
+    private static final String P_BLZDPZ = "变量字段配置";
     /**
     * 输入字段信息
     */
@@ -61,6 +62,10 @@ public class Zyycl extends EasyExpandRunBase{
         }
         //合并号码与资源的去重字段
         hm.put("jg_qczd", hm.getString("hm_qcbz")+"||"+zy.getString("qczd"));
+        //变量读取
+        for(JSONObject zd:configInfo.getJSONArray(P_BLZDPZ).toArray(new JSONObject[]{})){
+            hm.put(zd.getString("字段代码"), getVariavle(zd.getString("变量名称")));
+        }
 
         //合并活动相关信息
         JSONObject hdxgxxJO = hbHdxgxx(zy);
@@ -161,8 +166,16 @@ public class Zyycl extends EasyExpandRunBase{
         //创建一个JSON对象，用于构建配置对象，避免直接拼字符串构建JSON字符串
         JSONObject params = new JSONObject();
         //资源字段
-        JSONArray jgzdpz = new JSONArray();
+        JSONArray blzdpz = new JSONArray();
         JSONObject zd = new JSONObject();
+        zd.put("字段代码", "qczd");
+        zd.put("字段名称", "去重字段");
+        zd.put("变量名称", "qczd");
+        blzdpz.add(zd);
+        params.put(P_BLZDPZ, blzdpz);
+        //资源字段
+        JSONArray jgzdpz = new JSONArray();
+        zd = new JSONObject();
         zd.put("字段代码", "qczd");
         zd.put("字段名称", "去重字段");
         zd.put("值来源", "qczd");
