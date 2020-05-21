@@ -1,4 +1,6 @@
 
+----------先用kettle创建默认资源库，然后执行如下语句，再执行kettle_test.sql导入本系统的资源库数据
+
 --r_job表扩展信息
 -- Add/modify columns 
 alter table R_JOB add RUN_STATUS VARCHAR2(100) default 'Stopped';
@@ -309,7 +311,7 @@ comment on column JOB_WARNING.SUBJECT
 comment on column JOB_WARNING.LOG_CHANNEL
   is '日志通道';
   
-create or replace view kettle_test.v_job_params as
+create or replace view v_job_params as
 select ja.id_job,ja.id_job_attribute id,
 to_char(ja.value_str) as ocode,
 to_char(ja1.value_str) as oname,
@@ -325,4 +327,55 @@ order by ja.nr asc
 /*
 参数设置
 */;
+
+---清空数据
+truncate table JOB_LOG;
+truncate table JOB_PARAMS;
+truncate table JOB_WARNING;
+truncate table R_CLUSTER;
+truncate table R_CLUSTER_SLAVE;
+truncate table R_CONDITION;
+truncate table R_DATABASE;
+truncate table R_DATABASE_ATTRIBUTE;
+truncate table R_DATABASE_CONTYPE;
+truncate table R_DATABASE_TYPE;
+truncate table R_DEPENDENCY;
+truncate table R_DIRECTORY;
+truncate table R_ELEMENT;
+truncate table R_ELEMENT_ATTRIBUTE;
+truncate table R_ELEMENT_TYPE;
+truncate table R_JOB;
+truncate table R_JOB_ATTRIBUTE;
+truncate table R_JOB_HOP;
+truncate table R_JOB_LOCK;
+truncate table R_JOB_NOTE;
+truncate table R_JOBENTRY;
+truncate table R_JOBENTRY_ATTRIBUTE;
+truncate table R_JOBENTRY_COPY;
+truncate table R_JOBENTRY_DATABASE;
+truncate table R_JOBENTRY_TYPE;
+truncate table R_LOG;
+truncate table R_LOGLEVEL;
+truncate table R_NAMESPACE;
+truncate table R_NOTE;
+truncate table R_PARTITION;
+truncate table R_PARTITION_SCHEMA;
+truncate table R_REPOSITORY_LOG;
+truncate table R_SLAVE;
+truncate table R_STEP;
+truncate table R_STEP_ATTRIBUTE;
+truncate table R_STEP_DATABASE;
+truncate table R_STEP_TYPE;
+truncate table R_TRANS_ATTRIBUTE;
+truncate table R_TRANS_CLUSTER;
+truncate table R_TRANS_HOP;
+truncate table R_TRANS_LOCK;
+truncate table R_TRANS_NOTE;
+truncate table R_TRANS_PARTITION_SCHEMA;
+truncate table R_TRANS_SLAVE;
+truncate table R_TRANS_STEP_CONDITION;
+truncate table R_TRANSFORMATION;
+truncate table R_USER;
+truncate table R_VALUE;
+truncate table R_VERSION;
 
