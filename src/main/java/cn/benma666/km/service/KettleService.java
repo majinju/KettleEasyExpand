@@ -87,8 +87,6 @@ public class KettleService extends BasicObject{
     private static final String FIELD_ZDYS_SFGX = "是否更新";
     private static final String FIELD_ZDYS_MBZD = "目标字段";
     private static final String FIELD_ZDYS_LYZD = "来源字段";
-    private static final String FIELD_ZDYS_ZDLX = "字段类型";
-    private static final String FIELD_ZDYS_ZDCD = "字段长度";
     private static final String FIELD_GXTJ_YSF = "运算符";
 
     //模板信息
@@ -317,6 +315,27 @@ public class KettleService extends BasicObject{
         lzmb = getLzmb().getMsg();
         //更多配置出来
         gdpz = JSONObject.parseObject(obj.getString("extended_description"));
+        JSONArray zdys = gdpz.getJSONArray("字段映射");
+        if(zdys==null){
+            zdys = new JSONArray();
+        }
+        String zdysStr = obj.getString("zdys");
+        if(StringUtil.isNotBlank(zdysStr)){
+            for(String row:zdysStr.split("\n")){
+                if(StringUtil.isBlank(row)){
+                    continue;
+                }
+                //每行依次为：来源字段、目标字段、是否更新、字段类型、字段长度，采用制表符分隔
+                String[] vals = row.split("\t");
+                JSONObject ys = new JSONObject();
+                ys.put(FIELD_ZDYS_LYZD, vals[0]);
+                ys.put(FIELD_ZDYS_MBZD, vals[1]);
+                ys.put(FIELD_ZDYS_SFGX, vals[2]);
+                zdys.add(ys);
+            }
+        }
+        gdpz.put("字段映射", zdys);
+        obj.put("extended_description", gdpz.toJSONString());
         gdpz.put("lydx", obj.getString("lydx"));
         gdpz.put("mbdx", obj.getString("mbdx"));
         gdpz.put("srzj", srzj);
@@ -339,6 +358,7 @@ public class KettleService extends BasicObject{
         if(StringUtil.isNotBlank(obj.getString("id_job"))){
             directory = obj.getString("id_directory");
             if(!obj.getBooleanValue("cxsc")){
+                //不重新生成
                 jm = KettleUtils.loadJob(obj.getString("id_job"));
                 clzh = KettleUtils.loadTrans("处理转换",directory);
                 //设置为以前的id
@@ -413,7 +433,7 @@ public class KettleService extends BasicObject{
         }
         
         //字段映射
-        JSONArray zdys = gdpz.getJSONArray("字段映射");
+        zdys = gdpz.getJSONArray("字段映射");
         for(JSONObject ys:zdys.toArray(new JSONObject[]{})){
             updateLookup.add(ys.getString(FIELD_ZDYS_MBZD).toUpperCase());
             updateStream.add(ys.getString(FIELD_ZDYS_LYZD).toUpperCase());
@@ -510,7 +530,8 @@ public class KettleService extends BasicObject{
         addParamVal(GGZY_CLHGZ,"bdwj");
         addParamVal(GGZY_CLSBGZ,"bdwj");
         setParam("SOURCE_TPF", lydx.getJtdx());
-        JSONArray zdys = gdpz.getJSONArray("字段映射");
+        @SuppressWarnings("unchecked")
+        Map<String,JSONObject> lyFields = (Map<String, JSONObject>) lydxParams.get(LjqInterface.KEY_FIELDS);
         switch (srzj) {
         case "wbwj":
             setParam("SOURCE_FGF", srpz.getString("分隔符"));
@@ -519,11 +540,15 @@ public class KettleService extends BasicObject{
             text.setNrHeaderLines(srpz.getIntValue("头部行数"));
             text.setEncoding(srpz.getString("编码方式"));
             List<TextFileInputField> tfl = new ArrayList<TextFileInputField>();
-            for(JSONObject fo:zdys.toArray(new JSONObject[zdys.size()])){
+            for(JSONObject fo:lyFields.values()){
+                if("99".equals(fo.getString("zdywlb"))){
+                    //跳过虚拟字段
+                    continue;
+                }
                 TextFileInputField field = new TextFileInputField();
-                field.setName(fo.getString(FIELD_ZDYS_LYZD).toUpperCase());
-                field.setType(ValueMeta.getType(fo.getString(FIELD_ZDYS_ZDLX)));
-                field.setLength(fo.getIntValue(FIELD_ZDYS_ZDCD));
+                field.setName(fo.getString("zddm").toUpperCase());
+                field.setType(ValueMeta.getType(zdlxZH(fo.getString("zdlx"))));
+                field.setLength(-1);
                 field.setTrimType(ValueMeta.getTrimTypeByDesc("去掉左右两端空格"));
                 tfl.add(field);
             }
@@ -542,10 +567,14 @@ public class KettleService extends BasicObject{
             excel.setStartRow(new int[]{srpz.getIntValue("起始行")});
             excel.setStartColumn(new int[]{srpz.getIntValue("起始列")});
             List<ExcelInputField> efl = new ArrayList<ExcelInputField>();
-            for(JSONObject fo:zdys.toArray(new JSONObject[zdys.size()])){
+            for(JSONObject fo:lyFields.values()){
+                if("99".equals(fo.getString("zdywlb"))){
+                    //跳过虚拟字段
+                    continue;
+                }
                 ExcelInputField field = new ExcelInputField();
-                field.setName(fo.getString(FIELD_ZDYS_LYZD).toUpperCase());
-                field.setType(ValueMeta.getType(fo.getString(FIELD_ZDYS_ZDLX)));
+                field.setName(fo.getString("zddm").toUpperCase());
+                field.setType(ValueMeta.getType(zdlxZH(fo.getString("zdlx"))));
                 //去掉两边空格
                 field.setTrimType(3);
                 efl.add(field);
@@ -562,7 +591,8 @@ public class KettleService extends BasicObject{
     * @author jingma
     */
     private void bzscBdwjsc() {
-        JSONArray zdys = gdpz.getJSONArray("字段映射");
+        @SuppressWarnings("unchecked")
+        Map<String,JSONObject> mbFields = (Map<String, JSONObject>)mbdxParams.get(LjqInterface.KEY_FIELDS);
         switch (sczj) {
         case "wbwj":
             setParam("TG_FGF", scpz.getString("分隔符"));
@@ -570,13 +600,17 @@ public class KettleService extends BasicObject{
             text.setEnclosure(scpz.getString("文本限定符"));
             text.setEncoding(scpz.getString("编码方式"));
             List<TextFileField> tfl = new ArrayList<TextFileField>();
-            for(JSONObject fo:zdys.toArray(new JSONObject[zdys.size()])){
+            for(JSONObject fo:mbFields.values()){
+                if("99".equals(fo.getString("zdywlb"))){
+                    //跳过虚拟字段
+                    continue;
+                }
                 TextFileField field = new TextFileField();
-                field.setName(fo.getString(FIELD_ZDYS_LYZD).toUpperCase());
-                field.setType(ValueMeta.getType(fo.getString(FIELD_ZDYS_ZDLX)));
+                field.setName(fo.getString("zddm").toUpperCase());
+                field.setType(ValueMeta.getType(zdlxZH(fo.getString("zdlx"))));
                 field.setLength(-1);
                 field.setPrecision(-1);
-                if("Number".equals(fo.getString(FIELD_ZDYS_ZDLX))){
+                if("Number".equals(field.getTypeDesc())){
                     field.setFormat("0.#####");
                 }
                 field.setTrimType(ValueMeta.getTrimTypeByDesc("去掉左右两端空格"));
@@ -595,10 +629,14 @@ public class KettleService extends BasicObject{
                 throw new MyException("excel类型的对象的具体对象的通配符后缀必须是.xls或.xlsx");
             }
             List<ExcelWriterStepField> efl = new ArrayList<ExcelWriterStepField>();
-            for(JSONObject fo:zdys.toArray(new JSONObject[zdys.size()])){
+            for(JSONObject fo:mbFields.values()){
+                if("99".equals(fo.getString("zdywlb"))){
+                    //跳过虚拟字段
+                    continue;
+                }
                 ExcelWriterStepField field = new ExcelWriterStepField();
-                field.setName(fo.getString(FIELD_ZDYS_LYZD).toUpperCase());
-                field.setType(ValueMeta.getType(fo.getString(FIELD_ZDYS_ZDLX)));
+                field.setName(fo.getString("zddm").toUpperCase());
+                field.setType(ValueMeta.getType(zdlxZH(fo.getString("zdlx"))));
                 efl.add(field);
             }
             excel.setOutputFields(efl.toArray(new ExcelWriterStepField[efl.size()]));
@@ -692,7 +730,12 @@ public class KettleService extends BasicObject{
     * @param mrz
     */
     private void setParam(String csdm, String mrz) {
-        params.getJSONObject(csdm).put("默认值", mrz);
+        JSONObject p = params.getJSONObject(csdm);
+        if(p==null){
+            p = new JSONObject();
+            params.put(csdm, p);
+        }
+        p.put("默认值", mrz);
     }
 
     /**
@@ -789,10 +832,22 @@ public class KettleService extends BasicObject{
         gdpz.put("输出配置", mbdxMrpz());
         
         JSONObject r = new JSONObject();
-        r.put("extended_description", gdpz.toJSONString());
         r.put("lzmb", lzmb);
         r.put("sczj", sczj);
         r.put("srzj", srzj);
+        JSONArray zdys = gdpz.getJSONArray("字段映射");
+        if(zdys==null){
+            zdys = new JSONArray();
+        }
+        StringBuffer zdysStr = new StringBuffer();
+        for(JSONObject row:zdys.toArray(new JSONObject[]{})){
+            zdysStr.append(row.getString(FIELD_ZDYS_LYZD)+"\t");
+            zdysStr.append(row.getString(FIELD_ZDYS_MBZD)+"\t");
+            zdysStr.append(row.getString(FIELD_ZDYS_SFGX)+"\n");
+        }
+        gdpz.remove("字段映射");
+        r.put("extended_description",gdpz.toJSONString());
+        r.put("zdys", zdysStr.toString());
         return success("获取配置成功", r);
     }
 
@@ -847,7 +902,9 @@ public class KettleService extends BasicObject{
         JSONArray gxtj = new JSONArray();
         Map<String,JSONObject> lyFields = (Map<String, JSONObject>) lydxParams.get(LjqInterface.KEY_FIELDS);
         Map<String,JSONObject> mbFields = (Map<String, JSONObject>) mbdxParams.get(LjqInterface.KEY_FIELDS);
+        //来源字段基于id的Map
         Map<String,JSONObject> lyFieldsByid = new HashMap<String,JSONObject>();
+        //来源字段基于标准字段的Map
         Map<String,JSONObject> lyFieldsByBzzd = new HashMap<String,JSONObject>();
         for(JSONObject ly:lyFields.values()){
             lyFieldsByid.put(ly.getString("id"),ly);
@@ -859,28 +916,32 @@ public class KettleService extends BasicObject{
                 //跳过虚拟字段
                 continue;
             }
+            if(mbf.getString("zddm").equals(mbdx.getZlzd())&&(
+                    "bsr".equals(sczj)||"crgx".equals(sczj))){
+                //该字段为增量字段，插入数据需要保持递增
+                JSONObject f = new JSONObject();
+                //递增的时间在流程中通过js生成
+                f.put(FIELD_ZDYS_LYZD, "my_zlsj");
+                f.put(FIELD_ZDYS_MBZD, mbf.getString("zddm"));
+                f.put(FIELD_ZDYS_SFGX, true);
+                zdys.add(f);
+                continue;
+            }
             //字段代码相同
             JSONObject lyf = lyFields.get(mbe.getKey());
             if(lyf==null){
                 //目标字段的标准字段在来源对象中
                 lyf = lyFieldsByid.get(mbf.getString("bzzd"));
-                if(lyf==null){
-                    //目标字段的是来源对象字段的标准字段
-                    lyf = lyFieldsByBzzd.get(mbf.getString("id"));
-                }
+            }
+            if(lyf==null){
+                //目标字段是来源对象字段的标准字段
+                lyf = lyFieldsByBzzd.get(mbf.getString("id"));
             }
             if(lyf!=null){
                 JSONObject f = new JSONObject();
                 f.put(FIELD_ZDYS_LYZD, lyf.getString("zddm"));
                 f.put(FIELD_ZDYS_MBZD, mbf.getString("zddm"));
                 f.put(FIELD_ZDYS_SFGX, mbf.getBoolean("yxbj"));
-                String zdlx = mbf.getString("zdlx");
-                String nzdlx = DictManager.zdMcByDm("KETTLE_DXLZ_ZDLXYS", zdlx);
-                if(zdlx.equals(nzdlx)){
-                    nzdlx = "String";
-                }
-                f.put(FIELD_ZDYS_ZDLX, nzdlx);
-                f.put(FIELD_ZDYS_ZDCD, mbf.getString("zdcd"));
                 zdys.add(f);
                 //更新条件判断
                 if(mbf.getIntValue("qcbh")>0){
@@ -893,22 +954,50 @@ public class KettleService extends BasicObject{
                     gxtj.add(tj);
                 }
             }
-            if(gxtj.size()==0){
-                //当没有单独配置去重字段时，采用主键去重
-                JSONObject tj = new JSONObject();
-                tj.put(FIELD_ZDYS_LYZD, lydx.getZjzd());
-                tj.put(FIELD_ZDYS_MBZD, mbdx.getZjzd());
-                tj.put(FIELD_GXTJ_YSF, "=");
-                gxtj.add(tj);
-            }
-            
+        }
+        if(gxtj.size()==0){
+            //当没有单独配置去重字段时，采用主键去重
+            JSONObject tj = new JSONObject();
+            tj.put(FIELD_ZDYS_LYZD, lydx.getZjzd());
+            tj.put(FIELD_ZDYS_MBZD, mbdx.getZjzd());
+            tj.put(FIELD_GXTJ_YSF, "=");
+            gxtj.add(tj);
         }
         gdpz.put("字段映射", zdys);
         gdpz.put("更新条件", gxtj);
     }
 
+    /**
+    * 数据世界字段类型转为kettle数据类型 <br/>
+    * @author jingma
+    * @param zdlx
+    * @return
+    */
+    private String zdlxZH(String zdlx) {
+        String nzdlx = DictManager.zdMcByDm("KETTLE_DXLZ_ZDLXYS", zdlx);
+        if(zdlx.equals(nzdlx)){
+            //没有配置映射关系
+            nzdlx = "String";
+        }
+        return nzdlx;
+    }
+
     public JsonResult getJobDxlz() throws KettleException{
         getJobInfo();
+        gdpz = JSONObject.parseObject(obj.getString("extended_description"));
+        JSONArray zdys = gdpz.getJSONArray("字段映射");
+        if(zdys==null){
+            zdys = new JSONArray();
+        }
+        StringBuffer zdysStr = new StringBuffer();
+        for(JSONObject row:zdys.toArray(new JSONObject[]{})){
+            zdysStr.append(row.getString(FIELD_ZDYS_LYZD)+"\t");
+            zdysStr.append(row.getString(FIELD_ZDYS_MBZD)+"\t");
+            zdysStr.append(row.getString(FIELD_ZDYS_SFGX)+"\n");
+        }
+        gdpz.remove("字段映射");
+        obj.put("extended_description",gdpz.toJSONString());
+        obj.put("zdys", zdysStr.toString());
         return success("获取成功",obj);
     }
 

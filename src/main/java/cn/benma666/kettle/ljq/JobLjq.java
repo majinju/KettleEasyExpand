@@ -7,7 +7,11 @@
 package cn.benma666.kettle.ljq;
 
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -39,6 +43,14 @@ import com.alibaba.fastjson.JSONObject;
  * @version 
  */
 public class JobLjq extends DefaultLjq{
+    /**
+    * 作业新增字段集合
+    */
+    private static Set<String>  jobXzzdSet = new HashSet<String>(Arrays.asList("run_status","last_update",
+            "auto_restart_num","repository_code","project_code","oorder","zlsjc","timing","log_level","zylx",
+            "gxsx","rzsx","bzsx","scwcsj","sczxzt","jcpl","gzlj","shell","sjzt","sql","js","kmlm","kmpz",
+            "lydx","mbdx","lzmb","gdpz","srzj","sczj","id_job","name","description","extended_description",
+            "job_version","job_status"));
 
     /**
     * 
@@ -368,6 +380,12 @@ public class JobLjq extends DefaultLjq{
             myParams.put(KEY_CLLX,KEY_CLLX_UPDATE);
         }
         if(r.isStatus()){
+            //只更新人工新增的字段
+            for(Entry<String, Object> e:yobj.entrySet()){
+                if(!jobXzzdSet.contains(e.getKey())){
+                    yobj.put(e.getKey(), null);
+                }
+            }
             //直接数据库更新,更新最后进行，因为kettle修改作业会先删除再添加。
             myParams.put(KEY_YOBJ, yobj);
             JSONObject pcyzgz = new JSONObject();

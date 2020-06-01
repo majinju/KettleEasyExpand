@@ -18,6 +18,7 @@ import org.pentaho.di.core.variables.VariableSpace;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.StepMeta;
 
+import cn.benma666.exception.MyException;
 import cn.benma666.kettle.mytuils.Db;
 import cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase;
 import cn.benma666.myutils.JsonResult;
@@ -72,7 +73,11 @@ public class Zyycl extends EasyExpandRunBase{
         zy.put("hdxgxx", hdxgxxJO.toJSONString());
         //资源备用字段关系映射
         for(String xgxx:hdxgxxJO.keySet()){
-            outputRow[getFieldIndex(flagYsgx.get(xgxx).getString("zddm"))] = hdxgxxJO.get(xgxx);
+            try {
+                outputRow[getFieldIndex(flagYsgx.get(xgxx).getString("zddm"))] = hdxgxxJO.get(xgxx);
+            } catch (Exception e1) {
+                throw new MyException("备用字段映射出错："+flagYsgx+hdxgxxJO, e1);
+            }
         }
         
         //复制资源信息到hm对象中便于后续处理
@@ -100,8 +105,17 @@ public class Zyycl extends EasyExpandRunBase{
         JSONObject hdxgxxJO = new JSONObject();
         if(StringUtil.isNotBlank(hdxgxxTxt)){
             //字段1#t2#字段1的值#t1#字段2#t2#字段2的值#t1#字段3#t2#字段3的值
-            hdxgxxTxt = "{\""+hdxgxxTxt.replace("#t2#", "\":\"").replace("#t1#", "\",\"")+"\"}";
-            hdxgxxJO = JSON.parseObject(hdxgxxTxt);
+            hdxgxxTxt = "{\""+hdxgxxTxt.replace("#t2#", "\":\"")
+                    .replace("#t1#", "\",\"").replace("\n", "")+"\"}";
+            try {
+                hdxgxxJO = JSON.parseObject(hdxgxxTxt);
+            } catch (Exception e) {
+                ku.logError("解析为JSON对象失败："+hdxgxxTxt, e);
+                for(String z:hdxgxxTxt.split("#t1#")){
+                    String[] sa = z.split("#t2#");
+                    hdxgxxJO.put(sa[0], sa[1]);
+                }
+            }
         }
         for(String zd:zy.keySet()){
             if(zd.startsWith("xgxx_")){
@@ -147,6 +161,7 @@ public class Zyycl extends EasyExpandRunBase{
                         sjzd.getString("id")));
             }
         }
+        ku.logDebug("字段映射："+flagYsgx+Arrays.toString(inputRow));
     }
     /**
     * 

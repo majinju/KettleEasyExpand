@@ -15,6 +15,8 @@ import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
 
+import cn.benma666.exception.MyException;
+
 /**
 * Kettle工具类 <br/>
 * date: 2016年6月20日 <br/>
@@ -47,9 +49,10 @@ public class EasyExpand extends BaseStep implements StepInterface {
                 return kui.run();
             } catch (Exception e) {
                 setErrors(getErrors()+1);
-                logError("运行失败,"+meta.getClassName()+","+Arrays.toString(getRow())+","
+//                logError("运行失败,"+meta.getClassName()+","+Arrays.toString(getRow())+","
+//                +environmentSubstitute(meta.getConfigInfo()), e);
+                throw new MyException("运行失败,"+meta.getClassName()+","+Arrays.toString(getRow())+","
                 +environmentSubstitute(meta.getConfigInfo()), e);
-                return defaultRun();
             }
 		}else{
 	        return defaultRun();
