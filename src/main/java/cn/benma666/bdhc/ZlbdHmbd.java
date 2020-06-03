@@ -80,7 +80,7 @@ public class ZlbdHmbd extends EasyExpandRunBase implements WebInitInterface{
                 }
                 Object[] or1 = new Object[2];
                 or1[getFieldIndex("HMOBJ")] = hm;
-                or1[getFieldIndex("ZYOBJ")] = zy;
+                or1[getFieldIndex("ZYOBJ")] = zy.clone();
                 ku.putRow(data.outputRowMeta, or1);
             }
         }

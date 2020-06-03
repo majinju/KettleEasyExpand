@@ -29,7 +29,6 @@ alter table R_JOB add KMPZ VARCHAR2(4000);
 alter table R_JOB add LYDX VARCHAR2(32);
 alter table R_JOB add MBDX VARCHAR2(32);
 alter table R_JOB add LZMB VARCHAR2(255);
-alter table R_JOB add GDPZ VARCHAR2(4000);
 alter table R_JOB add SRZJ VARCHAR2(32);
 alter table R_JOB add SCZJ VARCHAR2(32);
 -- Add comments to the columns 
@@ -85,8 +84,6 @@ comment on column R_JOB.MBDX
   is '目标对象';
 comment on column R_JOB.LZMB
   is '流转模板';
-comment on column R_JOB.GDPZ
-  is '更多配置';
 comment on column R_JOB.SRZJ
   is '输入组件';
 comment on column R_JOB.SCZJ
@@ -316,7 +313,7 @@ select ja.id_job,ja.id_job_attribute id,
 to_char(ja.value_str) as ocode,
 to_char(ja1.value_str) as oname,
 to_char(ja2.value_str) as PARAM_DEFAULT,
-p.value,p.simple_spell,p.full_spell,p.update_date
+p.value,p.simple_spell,p.full_spell,nvl(p.update_date,'0000') update_date,ja.nr,p.oid
 from r_job_attribute ja
 inner join r_job_attribute ja1 on ja1.id_job=ja.id_job and ja1.nr=ja.nr and ja1.code='PARAM_DESC'
 inner join r_job_attribute ja2 on ja2.id_job=ja.id_job and ja2.nr=ja.nr and ja2.code='PARAM_DEFAULT'

@@ -57,6 +57,7 @@ public class QlbdHmbd extends EasyExpandRunBase{
         for(JSONObject zy:list){
             Object[] or1 = RowDataUtil.createResizedCopy( outputRow, data.outputRowMeta.size() );
             or1[getFieldIndex("ZYOBJ")] = zy;
+            or1[getFieldIndex("HMOBJ")] = hm.clone();
             ku.putRow(data.outputRowMeta, or1);
         }
         return success("99");

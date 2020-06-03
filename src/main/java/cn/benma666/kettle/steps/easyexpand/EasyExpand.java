@@ -49,10 +49,14 @@ public class EasyExpand extends BaseStep implements StepInterface {
                 return kui.run();
             } catch (Exception e) {
                 setErrors(getErrors()+1);
-//                logError("运行失败,"+meta.getClassName()+","+Arrays.toString(getRow())+","
-//                +environmentSubstitute(meta.getConfigInfo()), e);
-                throw new MyException("运行失败,"+meta.getClassName()+","+Arrays.toString(getRow())+","
-                +environmentSubstitute(meta.getConfigInfo()), e);
+                Object[] ir = null;
+                if(kui==null){
+                    ir = getRow();
+                }else{
+                    ir = kui.getInputRow();
+                }
+                throw new MyException("运行失败,"+meta.getClassName()+","+Arrays.toString(ir)+","
+                        +environmentSubstitute(meta.getConfigInfo()), e);
             }
 		}else{
 	        return defaultRun();

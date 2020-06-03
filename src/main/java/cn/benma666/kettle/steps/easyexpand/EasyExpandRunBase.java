@@ -299,4 +299,19 @@ public abstract class EasyExpandRunBase extends BasicObject{
     public void setConfigInfo(JSONObject configInfo) {
         this.configInfo = configInfo;
     }
+
+    /**
+     * @return inputRow 
+     */
+    public Object[] getInputRow() {
+        return inputRow;
+    }
+
+    /**
+     * @param inputRow the inputRow to set
+     */
+    public void setInputRow(Object[] inputRow) {
+        this.inputRow = inputRow;
+    }
+    
 }

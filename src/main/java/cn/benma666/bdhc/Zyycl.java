@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.row.ValueMeta;
@@ -18,7 +19,6 @@ import org.pentaho.di.core.variables.VariableSpace;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.StepMeta;
 
-import cn.benma666.exception.MyException;
 import cn.benma666.kettle.mytuils.Db;
 import cn.benma666.kettle.steps.easyexpand.EasyExpandRunBase;
 import cn.benma666.myutils.JsonResult;
@@ -43,9 +43,9 @@ public class Zyycl extends EasyExpandRunBase{
     */
     public JSONObject inputField = new JSONObject();
     /**
-    * 备用字段映射关系<字段名称，字段对象>
+    * 备用字段映射关系<字段名称，字段代码>
     */
-    private Map<String, JSONObject> flagYsgx = new HashMap<String, JSONObject>();
+    private Map<String, String> flagYsgx = new HashMap<String, String>();
     
     /**
     * 具体处理每一行数据
@@ -54,6 +54,7 @@ public class Zyycl extends EasyExpandRunBase{
     */
     @Override
     protected JsonResult disposeRow(Object[] outputRow) throws Exception{
+        ku.logDebug("输入:"+Arrays.toString(inputRow));
         JSONObject hm = (JSONObject)inputRow[ku.getInputRowMeta().indexOfValue("HMOBJ")];
         JSONObject zy = (JSONObject)inputRow[ku.getInputRowMeta().indexOfValue("ZYOBJ")];
         //去重信息处理
@@ -71,20 +72,15 @@ public class Zyycl extends EasyExpandRunBase{
         //合并活动相关信息
         JSONObject hdxgxxJO = hbHdxgxx(zy);
         zy.put("hdxgxx", hdxgxxJO.toJSONString());
-        //资源备用字段关系映射
-        for(String xgxx:hdxgxxJO.keySet()){
-            try {
-                outputRow[getFieldIndex(flagYsgx.get(xgxx).getString("zddm"))] = hdxgxxJO.get(xgxx);
-            } catch (Exception e1) {
-                throw new MyException("备用字段映射出错："+flagYsgx+hdxgxxJO, e1);
-            }
+        Set<String> ks = hdxgxxJO.keySet();
+        for(String xgxx:ks){
+            outputRow[getFieldIndex(flagYsgx.get(xgxx))] = hdxgxxJO.get(xgxx);
         }
         
         //复制资源信息到hm对象中便于后续处理
         for(Entry<String, Object> e:zy.entrySet()){
             hm.put("zy_"+e.getKey(), e.getValue());
         }
-        
         //补全输出信息，需要输出到结果中
         for(JSONObject zd:configInfo.getJSONArray(P_JGZDPZ).toArray(new JSONObject[]{})){
             outputRow[getFieldIndex(zd.getString("字段代码"))] = hm.getString(zd.getString("值来源"));
@@ -105,15 +101,12 @@ public class Zyycl extends EasyExpandRunBase{
         JSONObject hdxgxxJO = new JSONObject();
         if(StringUtil.isNotBlank(hdxgxxTxt)){
             //字段1#t2#字段1的值#t1#字段2#t2#字段2的值#t1#字段3#t2#字段3的值
-            hdxgxxTxt = "{\""+hdxgxxTxt.replace("#t2#", "\":\"")
-                    .replace("#t1#", "\",\"").replace("\n", "")+"\"}";
-            try {
-                hdxgxxJO = JSON.parseObject(hdxgxxTxt);
-            } catch (Exception e) {
-                ku.logError("解析为JSON对象失败："+hdxgxxTxt, e);
-                for(String z:hdxgxxTxt.split("#t1#")){
-                    String[] sa = z.split("#t2#");
+            for(String z:hdxgxxTxt.split("#t1#")){
+                String[] sa = z.split("#t2#");
+                if(sa.length==2){
                     hdxgxxJO.put(sa[0], sa[1]);
+                }else{
+                    hdxgxxJO.put(sa[0], null);
                 }
             }
         }
@@ -151,11 +144,11 @@ public class Zyycl extends EasyExpandRunBase{
         for(String xgxx:hdxgxx.keySet()){
             if(zdmcMap.containsKey(xgxx)){
                 //存在映射关系
-                flagYsgx.put(xgxx, zdmcMap.get(xgxx));
+                flagYsgx.put(xgxx, zdmcMap.get(xgxx).getString("zddm"));
             }else{
                 //不存在映射关系
                 JSONObject sjzd = zdwysList.get(xzzdIdx++);
-                flagYsgx.put(xgxx, sjzd);
+                flagYsgx.put(xgxx, sjzd.getString("zddm"));
                 //自动添加资源的映射关系
                 Db.use().update("bdhc.updateSjzdById", Db.buildMap(xgxx,
                         sjzd.getString("id")));
