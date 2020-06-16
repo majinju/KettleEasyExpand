@@ -277,12 +277,12 @@ public class FileLoggingEventListener implements KettleLoggingEventListener {
         synchronized ( jobNameLogListener ) {
             FileLoggingEventListener l = jobLogListener.get(idJob);
             l.close();
+            updateJoblog(job);
             jobLogFile.remove(idJob);
             jobLogOidMap.remove(idJob);
             jobLogListener.remove(idJob);
             jobNameLogListener.remove(job.getJobMeta().getName());
         }
-        updateJoblog(job);
     }
 
     /**
