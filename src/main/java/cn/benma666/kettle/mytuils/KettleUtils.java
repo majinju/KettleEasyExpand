@@ -49,14 +49,13 @@ import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
 import org.pentaho.di.trans.steps.jobexecutor.JobExecutorMeta;
 import org.pentaho.di.trans.steps.transexecutor.TransExecutorMeta;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import cn.benma666.constants.UtilConst;
 import cn.benma666.domain.SysSjglSjdx;
 import cn.benma666.exception.MyException;
 import cn.benma666.iframe.CacheFactory;
 import cn.benma666.myutils.JdbcUtil;
+import cn.benma666.myutils.Log;
 import cn.benma666.myutils.StringUtil;
 
 import com.alibaba.fastjson.JSON;
@@ -74,7 +73,7 @@ public class KettleUtils {
 	/**
 	 * LOG:日志
 	 */
-	public static Logger log = LoggerFactory.getLogger(KettleUtils.class);
+	public static org.apache.commons.logging.Log log = Log.log;
     /**
      * repository:kettle资源库
      */

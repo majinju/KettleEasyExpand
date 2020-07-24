@@ -51,28 +51,28 @@ public class TimingUtil{
             Integer intervalSeconds = timing.getIntValue("intervalSeconds");
             Integer intervalMinutes = timing.getIntValue("intervalMinutes");
             if(intervalMinutes==0){
-                result = "等"+intervalSeconds+"秒执行一次";
+                result = "等"+intervalSeconds+"秒";
             }else{
-                result = "等"+intervalMinutes+"分"+intervalSeconds+"秒执行一次";
+                result = "等"+intervalMinutes+"分"+intervalSeconds+"秒";
             }
         }else if(JobEntrySpecial.DAILY==schedulerType){
-            result = "一天的"+hour+"点"+minutes+"分执行一次";
+            result = "一天的"+hour+"点"+minutes+"分";
         }else if(JobEntrySpecial.WEEKLY==schedulerType){
             Integer weekDay = timing.getIntValue("weekDay");
             String week = DictManager.zdMcByDm(UtilConst.DICT_CATEGORY_WEEK_DAY, weekDay.toString());
-            result = week + "的"+hour+"点"+minutes+"分执行一次";
+            result = week + "的"+hour+"点"+minutes+"分";
         }else if(JobEntrySpecial.MONTHLY==schedulerType){
             Integer dayOfMonth = timing.getIntValue("dayOfMonth");
-            result = "一个月的"+dayOfMonth+"日"+hour+"点"+minutes+"分执行一次";
+            result = "一个月的"+dayOfMonth+"日"+hour+"点"+minutes+"分";
         }else if(JobEntrySpecial.CRON==schedulerType){
             String cron = timing.getString("cron");
             result = cron;
         }
         if(UtilConst.WHETHER_TRUE.equals(isRepeat)){
-            result+="/重复执行";
+            result+="/重";
         }
         if(UtilConst.WHETHER_TRUE.equals(initSatrt)){
-            result+="/初始执行";
+            result+="/初";
         }
 	    String msg=result;
         return msg;
