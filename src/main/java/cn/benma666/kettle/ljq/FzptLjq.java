@@ -42,7 +42,7 @@ public class FzptLjq extends DefaultLjq{
             //删除
             String[]  fzdxArr = new String[]{"KETTLE_GLPT_ZYGL","KETTLE_GLPT_SJKGL",
                     "KETTLE_GLPT_JCRZ","KETTLE_GLPT_ZYYJ","KETTLE_GLPT_ZYJKPZ","KETTLE_GLPT_ZHGL",
-                    "SYS_QX_YHXX_ZYGLDL","SYS_QX_QXXX_ZYGLCD"};
+                    "KETTLE_GLPT_ZYZHYY","SYS_QX_YHXX_ZYGLDL","SYS_QX_QXXX_ZYGLCD"};
             String gndmhz = yobj.getString("gndmhz");
             String sql = "delete from sys_sjgl_sjdx t where t.dxdm in (";
             for(String dm : fzdxArr){
@@ -68,7 +68,7 @@ public class FzptLjq extends DefaultLjq{
         SysSjglSjdx sjdxDx = (SysSjglSjdx) sjdxParams.get(KEY_SJDX);
         List<JSONObject> list = db.find("select id from sys_sjgl_sjdx t where t.dxdm in ('KETTLE_GLPT_ZYGL',"
                 + "'KETTLE_GLPT_SJKGL','KETTLE_GLPT_JCRZ','KETTLE_GLPT_ZYYJ','KETTLE_GLPT_ZYJKPZ',"
-                + "'KETTLE_GLPT_ZHGL','SYS_QX_YHXX_ZYGLDL','SYS_QX_QXXX_ZYGLCD')");
+                + "'KETTLE_GLPT_ZYZHYY','KETTLE_GLPT_ZHGL','SYS_QX_YHXX_ZYGLDL','SYS_QX_QXXX_ZYGLCD')");
         List<String> idList = new ArrayList<String>();
         for(JSONObject o : list){
             idList.add(o.getString("id"));

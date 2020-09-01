@@ -14,7 +14,6 @@ import cn.benma666.myutils.StringUtil;
 import cn.benma666.sjgl.LjqInterface;
 
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.util.TypeUtils;
 
 /**
 * 任务定时 <br/>
@@ -23,12 +22,6 @@ import com.alibaba.fastjson.util.TypeUtils;
 * @version 
 */
 public class TimingUtil{
-	public static int startTypeId = 0;
-    static {
-        //设置开始控件类型id
-        TimingUtil.startTypeId = TypeUtils.castToInt(JobManager.kettledb.queryStr(
-                "select jt.id_jobentry_type from r_jobentry_type jt where jt.code='SPECIAL'"));
-    }
 	
 	/**
 	* 将定时对象转为简单可理解的文本 <br/>
@@ -126,7 +119,8 @@ public class TimingUtil{
         //START控件的类型编号是74，每个JOB只有一个START控件，所有可以唯一确定
         String sql = "select je.id_jobentry from r_jobentry je where "
                 + "je.id_job=? and je.id_jobentry_type=?";
-        JSONObject startIdObj = JobManager.kettledb.findFirst(sql, jobId,startTypeId);
+        JSONObject startIdObj = JobManager.kettledb.findFirst(sql, jobId,
+                JobManager.getJobentryTypeId("SPECIAL"));
         if(startIdObj == null){
             return null;
         }

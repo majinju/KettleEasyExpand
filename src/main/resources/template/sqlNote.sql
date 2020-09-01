@@ -325,6 +325,38 @@ order by ja.nr asc
 参数设置
 */;
 
+create or replace view v_job_trans_yy as
+select j.id_job,
+       j.name,
+       to_char(j.description) description,
+       je.id_jobentry,
+       je.name je_name,
+       to_char(ja.value_str) zhmc,
+       zhlj
+  from r_job j
+ inner join r_jobentry je
+    on j.id_job = je.id_job
+ inner join r_jobentry_attribute ja
+    on ja.id_jobentry = je.id_jobentry
+ inner join (select je.id_jobentry, ja.code, to_char(ja.value_str) zhlj
+               from r_job j
+              inner join r_jobentry je
+                 on j.id_job = je.id_job
+              inner join r_jobentry_attribute ja
+                 on ja.id_jobentry = je.id_jobentry
+              where je.id_jobentry_type =
+                    (select jt.id_jobentry_type
+                       from r_jobentry_type jt
+                      where jt.code = 'TRANS')
+                and ja.code = 'dir_path') jad
+    on jad.id_jobentry = je.id_jobentry
+ where je.id_jobentry_type =
+       (select jt.id_jobentry_type
+          from r_jobentry_type jt
+         where jt.code = 'TRANS')
+   and ja.code = 'name'
+   /*作业对转换的引用视图*/;
+   
 ---清空数据
 truncate table JOB_LOG;
 truncate table JOB_PARAMS;

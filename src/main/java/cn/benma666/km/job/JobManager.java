@@ -48,6 +48,7 @@ import cn.benma666.web.SConf;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.util.TypeUtils;
 
 /**
  * 作业具体操作管理 <br/>
@@ -437,5 +438,15 @@ public class JobManager extends AbsJob {
      */
     public static Job getJob(int jobId) {
         return jobMap.get(jobId+"");
+    }
+    /**
+    * 根据组件类型名称得到组件的id <br/>
+    * @author jingma
+    * @param typeName 组件名称
+    * @return 组件id
+    */
+    public static int getJobentryTypeId(String typeName){
+        return TypeUtils.castToInt(kettledb.queryStr(
+                "select jt.id_jobentry_type from r_jobentry_type jt where jt.code=?",typeName));
     }
 }
