@@ -57,7 +57,7 @@
     <properties>
         <!-- 主要依赖库的版本定义 -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<springframework.version>4.3.6.RELEASE</springframework.version>
+		<springframework.version>5.3.18</springframework.version>
         <jdk.version>1.7</jdk.version>
         <junit.version>4.11</junit.version>
         <kettle.home>d:/NIS/data-integration5.4</kettle.home>
